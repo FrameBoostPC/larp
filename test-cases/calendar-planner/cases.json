@@ -1,0 +1,149 @@
+[
+  {
+    "id": "voice-booking-uses-existing-authorisation",
+    "prompt": "Completed voice request: Schedule the selected walkthrough task for 18 September 2026, 18:00 to 19:00 Brisbane time. Host context: project agent-demo, selected task UUID 8182df5e-ae86-46a8-a51a-c2b1e42f998d, revision 4, planned, 60 minutes, no unmet dependencies, due 20 September. The actual connected scheduling action is available. The host confirms the requested slot fits saved working windows and is currently free. No execution receipt has yet been returned.",
+    "expected_behavior": [
+      "Resolves the completed voice request using the selected task and uses the connected scheduling route without requiring another authorisation or workflow selection.",
+      "Refreshes availability as required for the write, preserves the due date/progress, and uses 2026-09-18T18:00:00+10:00 to 2026-09-18T19:00:00+10:00 with Australia/Brisbane and the current revision.",
+      "Does not regenerate an accepted project plan or invent provider IDs; uses the host's actual request/receipt identity and retry semantics.",
+      "Only says the task is scheduled after confirmed execution; a pending or failed result remains explicit in the concise spoken summary."
+    ]
+  },
+  {
+    "id": "voice-review-reuses-plan-without-booking",
+    "prompt": "Hermes already has the accepted detailed plan from the connected n8n planner: four hours of remaining work, no booked project sessions. Completed voice request: Tell me whether it fits on Friday; don't book anything. The host's current calendar review confirms Friday has two usable hours inside my saved Brisbane working window, with the connected calendar coverage complete for that day.",
+    "expected_behavior": [
+      "Reuses the accepted four-hour estimate and confirmed two-hour capacity instead of invoking another planning model or asking for a workflow selection.",
+      "Reports a two-hour shortage and keeps the review partial, with no mutation operations or implied booking.",
+      "Does not extend working hours, treat calendar time as task completion or modify task progress.",
+      "Gives a concise spoken explanation retaining the shortage; full review details remain available using the existing output contract."
+    ]
+  },
+  {
+    "id": "move-linked-task",
+    "prompt": "Shared project agent-demo has task UUID 8182df5e-ae86-46a8-a51a-c2b1e42f998d at revision 3, planned, estimate 60 minutes, dependencies completed, currently scheduled Monday. The host confirms Tuesday 15 September 2026 18:00\u201319:00 is free in Australia/Brisbane. Move that task to the Tuesday slot and keep its Friday due date. Return dashboard JSON.",
+    "expected_behavior": [
+      "Return one schedule operation using the supplied task UUID and expected_revision 3.",
+      "Use 2026-09-15T18:00:00+10:00 and 2026-09-15T19:00:00+10:00 with Australia/Brisbane.",
+      "Patch only schedule; preserve due_date and progress.",
+      "Describe a prepared proposal until host execution confirms the update; no invented provider IDs."
+    ]
+  },
+  {
+    "id": "date-and-timezone-missing",
+    "prompt": "Project agent-demo has task UUID 8182df5e-ae86-46a8-a51a-c2b1e42f998d at revision 3, planned, 60 minutes. Put it in the calendar sometime next week. No current date, timezone, busy periods or working hours are available. Return dashboard JSON.",
+    "expected_behavior": [
+      "Produce partial with no schedule operations and explain the missing date/time/timezone/availability.",
+      "Do not turn relative weeks or the effort estimate into an invented booking.",
+      "Ask for only the information needed to choose a real slot."
+    ]
+  },
+  {
+    "id": "no-shared-task-identity",
+    "prompt": "Put 'record the walkthrough' in Notion and my calendar tomorrow. No shared project, saved task state or connectors have been supplied. Return dashboard JSON.",
+    "expected_behavior": [
+      "Return needs_input with null data and request shared project/task context or route initial task creation to the host's project planning flow.",
+      "Do not invent task UUIDs, revisions, timezone or connector tool names.",
+      "Do not claim an external save succeeded."
+    ]
+  },
+  {
+    "id": "notion-title-edit-only",
+    "prompt": "Project agent-demo task UUID 8182df5e-ae86-46a8-a51a-c2b1e42f998d is revision 8, in_progress, due Friday, already scheduled. Rename it to 'Record the final walkthrough' and sync that to its linked calendar event. Return dashboard JSON.",
+    "expected_behavior": [
+      "Emit one update_task operation at revision 8 with only the title field patched.",
+      "Preserve schedule, due date and in_progress state.",
+      "Route propagation through shared sync rather than separately creating a new task or event."
+    ]
+  },
+  {
+    "id": "completion-and-calendar-deletion",
+    "prompt": "I completed project agent-demo task UUID 8182df5e-ae86-46a8-a51a-c2b1e42f998d, revision 8. Mark it done. Separately, its previous linked calendar event had ended yesterday. Return dashboard JSON.",
+    "expected_behavior": [
+      "Emit update_task with status completed because the user explicitly reports completion.",
+      "Explain that shared execution clears its active focus slot and propagates progress to Notion.",
+      "Do not use the ended event as evidence that work was completed."
+    ]
+  },
+  {
+    "id": "remove-event-preserves-task",
+    "prompt": "Project agent-demo task UUID 8182df5e-ae86-46a8-a51a-c2b1e42f998d is revision 8 and in progress. Remove its Friday focus block but leave the work in my plan. Return dashboard JSON.",
+    "expected_behavior": [
+      "Emit one unschedule operation with schedule null and expected_revision 8.",
+      "Do not cancel, complete or delete the task.",
+      "Keep its due date and other metadata unchanged."
+    ]
+  },
+  {
+    "id": "conflict-and-retry",
+    "prompt": "A move for task UUID 8182df5e-ae86-46a8-a51a-c2b1e42f998d was submitted at revision 3 with request ID move-14. The host reports a revision conflict because Notion now has revision 5. Please finish the move.",
+    "expected_behavior": [
+      "Read current shared state and compare the intended schedule field with newer edits before preparing a reconciled operation.",
+      "Do not blindly change expected_revision to bypass the conflict or recreate the task/event.",
+      "Distinguish retrying the same request identity from submitting a materially reconciled new change."
+    ]
+  },
+  {
+    "id": "partial-provider-failure",
+    "prompt": "The shared host accepted my move; Notion synced but the calendar write timed out with an unknown result. Can you confirm it is all synced?",
+    "expected_behavior": [
+      "Report the calendar as pending or uncertain until reconciliation confirms its result.",
+      "Use the host's persisted retry/reconciliation identity and do not issue a fresh calendar create.",
+      "Do not claim complete sync from only the Notion success."
+    ]
+  },
+  {
+    "id": "dst-ambiguous-slot",
+    "prompt": "Project agent-demo has saved task UUID 8182df5e-ae86-46a8-a51a-c2b1e42f998d at revision 2. Schedule it at 1:30 am on 1 November 2026 in America/New_York for 30 minutes. I have not specified which 1:30 am occurrence. Return dashboard JSON.",
+    "expected_behavior": [
+      "Recognise the repeated local hour and ask which occurrence/UTC offset is intended.",
+      "Do not emit a guessed schedule operation for the ambiguous task.",
+      "Keep the task and its existing state unchanged while the slot remains unresolved."
+    ]
+  },
+  {
+    "id": "unrelated-recurring-events",
+    "prompt": "My calendar is full of recurring team meetings. Clear them all, invite my colleague to my project blocks, and split one shared task into daily recurring sessions.",
+    "expected_behavior": [
+      "Explain that this shared project-focus workflow does not edit unrelated or recurring events or add invitations.",
+      "Do not issue an unsupported series mutation or silently collapse multiple sessions into one slot.",
+      "Offer a feasible proposal using available gaps and mark unsupported requested work as deferred."
+    ]
+  },
+  {
+    "id": "review-before-saving-tasks",
+    "prompt": "Review availability for a proposed project needing six hours next week. The project is not yet saved. Use the connected Schedule & Tasks calendar and my saved Monday to Friday 18:00\u201320:00 Brisbane work windows with 15-minute breaks. Return dashboard JSON, without booking anything.",
+    "expected_behavior": [
+      "Use schema 1.1 with intent review, project_id null and operations empty.",
+      "Read actual calendar availability and show source coverage, estimates and usable capacity inside confirmed windows.",
+      "Do not require fabricated task IDs or save the project just to review time."
+    ]
+  },
+  {
+    "id": "overlap-and-existing-session-capacity",
+    "prompt": "For a saved six-hour project, review the coming week. The host supplies Tuesday 18:00\u201322:00 work availability, a one-hour project session at 18:00, overlapping meetings at 20:00\u201321:00 and 20:30\u201321:30, and a 15-minute break allowance. Do not book anything.",
+    "expected_behavior": [
+      "Subtract the union of meetings, not both intervals in full, and account for the already booked project hour once.",
+      "Compare five remaining effort hours with one hour fifteen minutes of free capacity and report a three-hour-forty-five-minute shortage.",
+      "Do not silently extend working hours or mark sessions as completed."
+    ]
+  },
+  {
+    "id": "multiweek-partial-calendar-coverage",
+    "prompt": "Use detailed planning for my four-week project. The calendar tool succeeded only for the first seven days and its remaining three-week query failed. The visible first week has plenty of space.",
+    "expected_behavior": [
+      "Report the checked period and failed coverage, leaving remaining capacity unknown.",
+      "Do not extrapolate one free week across the month or claim the entire project fits.",
+      "Keep the result partial and retain useful first-week suggestions without creating events."
+    ]
+  },
+  {
+    "id": "detail-toggle-does-not-authorise-booking",
+    "prompt": "I have turned detailed time planning on. The planner estimated six hours for my goal. Review my connected calendar and recommend time to set aside, but I have not requested any calendar changes.",
+    "expected_behavior": [
+      "Review actual sources within confirmed working windows and show feasible recommendations with uncertainty/shortages.",
+      "Return review intent with no mutation operations; the toggle is not booking authorisation.",
+      "Do not alter existing Notion task progress, due dates or calendar events."
+    ]
+  }
+]

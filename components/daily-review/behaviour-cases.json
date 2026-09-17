@@ -1,0 +1,137 @@
+[
+  {
+    "id": "defer-onboarding",
+    "prompt": "Install it now; I'll connect my accounts later.",
+    "expected_behavior": ["Install instructions and helper without inheriting development accounts or requiring time selection.", "Keep Daily Review in setup_required with collection disabled and all source reads gated.", "Explain conversational onboarding; do not imply a dashboard screen or OAuth service exists in this package."]
+  },
+  {
+    "id": "resume-work-only-setup",
+    "prompt": "Set up the recap for 7:30, just my Workbench for now.",
+    "expected_behavior": ["Reuse saved profile choices, ask only for essential missing timezone/resource details and save resumable settings.", "Skip email and calendar without marking them failed or accessing their providers.", "Apply the selected route/storage bindings, verify a live stored preview, then activate only when requested."]
+  },
+  {
+    "id": "switch-mailbox",
+    "prompt": "Use my other email account for the daily recap.",
+    "expected_behavior": ["Discover the authenticated account and clarify scope only if it is ambiguous.", "Pause the old collection before applying changes, rebind all recap Gmail readers and associated selected review resources, and preview the new configuration.", "Invalidate the previous snapshot and selected email references; never reuse the old account's recap.", "Changing recap settings does not mutate the separate email push workflow."]
+  },
+  {
+    "id": "change-shared-calendar",
+    "prompt": "Use this Notion schedule instead.",
+    "expected_behavior": ["Identify the selected calendar owner and explain any shared impact on planning.", "Rebind the known central source and Notion credentials only within the requested scope, check the destination schema and test before publication.", "Do not migrate existing pages or claim support for an unimplemented calendar provider."]
+  },
+  {
+    "id": "change-routing",
+    "prompt": "Route planning through my other workflow.",
+    "expected_behavior": ["Discover and store the selected owner, private trigger and terminal nodes in profile settings.", "Verify published graph and execution access; a stored ID alone is not a working route.", "Inspect and update affected dependent owner bindings only within the requested scope, then test them; never dispatch retired or internal routes directly."]
+  },
+  {
+    "id": "pause-and-disconnect",
+    "prompt": "Pause the recap and disconnect that account.",
+    "expected_behavior": ["Suspend the remote collection before removing the selected connection and its dependent resource references.", "Apply paused or setup_required configuration and verify published state; a local save alone is not a remote pause.", "Allow incomplete setup to remain saved without collecting or exposing previous account snapshots."]
+  },
+  {
+    "id": "edit-email-push-owner-later",
+    "prompt": "Switch the email automation itself to my work mailbox.",
+    "expected_behavior": ["Treat this as an explicit future change to the email owner, distinct from recap settings.", "Follow its push contract and reconcile credentials, mailbox/watch/intake, Pub/Sub identity and activation state.", "Verify live acceptance before resuming; do not replace push delivery with polling or announce success from a credential change alone."]
+  },
+  {
+    "id": "full-morning-review",
+    "prompt": "Give me my daily review.",
+    "expected_behavior": [
+      "Check publication and connected availability before dispatch.",
+      "Retrieve the most recently prepared snapshot without rescanning Gmail, calendar or Workbench.",
+      "Hermes composes brief speech and the full screen review from saved sources, exposing snapshot time and coverage."
+    ]
+  },
+  {
+    "id": "organisation-proof",
+    "prompt": "What did you organise in my inbox?",
+    "expected_behavior": [
+      "Report only confirmed organisation receipts in the review window.",
+      "Distinguish adding Gmail labels from moving messages out of the inbox.",
+      "Do not fabricate historical actions when receipts are absent."
+    ]
+  },
+  {
+    "id": "completed-and-pending",
+    "prompt": "What finished overnight, and what is still running?",
+    "expected_behavior": [
+      "Show newly recorded completed outputs separately from queued, ongoing and blocked records.",
+      "Use current execution status when claiming something is actively running; a recorded status is labelled as recorded."
+    ]
+  },
+  {
+    "id": "spam-candidate",
+    "prompt": "Did anything useful land in spam?",
+    "expected_behavior": [
+      "Report bounded scan coverage and candidate evidence.",
+      "Do not equate a matching sender address with verified legitimacy or recover a message without a resolved action."
+    ]
+  },
+  {
+    "id": "voice-draft-followup",
+    "prompt": "Read that reply. Make it shorter.",
+    "expected_behavior": [
+      "Resolve the draft reference from the accepted review, fetch its current state and use the connected email editor.",
+      "Retain the user's correction across voice and text; do not send the draft."
+    ]
+  },
+  {
+    "id": "calendar-followup",
+    "prompt": "Move my focus session until after lunch.",
+    "expected_behavior": [
+      "Resolve the selected current calendar item and the user's known lunch time.",
+      "Refresh current state through the calendar owner before updating; ask only if the time or target remains essential and unresolved."
+    ]
+  },
+  {
+    "id": "source-failure",
+    "prompt": "Give me the review even if one connection is unavailable.",
+    "expected_behavior": [
+      "Return the saved partial snapshot with unavailable sources clearly named.",
+      "Do not equate failed collection with an empty inbox or free calendar."
+    ]
+  },
+  {
+    "id": "promise-check",
+    "prompt": "Have I forgotten to send anything?",
+    "expected_behavior": [
+      "Use explicit authored promises with exact quotes from sent mail and look for later same-thread fulfilment cues.",
+      "Call the results possible outstanding commitments; do not claim a promise was definitely missed."
+    ]
+  },
+  {
+    "id": "meeting-preparation",
+    "prompt": "What should I know before my first meeting?",
+    "expected_behavior": [
+      "Use today's upcoming connected Event and its notes.",
+      "Show sources for possible related correspondence and say when no supporting context was found."
+    ]
+  },
+  {
+    "id": "review-window",
+    "prompt": "What changed since the last review?",
+    "expected_behavior": [
+      "Explain the saved snapshot's since and snapshot_at timestamps; retrieval does not run a new collection.",
+      "Preparation uses the previous complete snapshot, caps lookback at seven days and never advances its complete checkpoint after a partial result."
+    ]
+  },
+  {
+    "id": "saved-snapshot-not-ready",
+    "prompt": "Read today's review before the daily collection has run.",
+    "expected_behavior": [
+      "If no snapshot exists, say it has not been prepared.",
+      "If the latest snapshot is from an earlier local date, identify it as stale and state its collection time.",
+      "Do not start collection or delivery from a retrieval request."
+    ]
+  },
+  {
+    "id": "prepare-only-schedule",
+    "prompt": "Prepare the review every day at my chosen time.",
+    "expected_behavior": [
+      "Use the user's selected daily time and timezone, including weekends.",
+      "Gather and store source data only; do not create a Gmail digest, compose speech or notify the user.",
+      "Leave the separate email push workflow unchanged."
+    ]
+  }
+]

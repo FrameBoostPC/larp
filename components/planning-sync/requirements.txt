@@ -1,0 +1,2 @@
+# IANA timezone data is not bundled with Python on Windows.
+tzdata>=2025.2

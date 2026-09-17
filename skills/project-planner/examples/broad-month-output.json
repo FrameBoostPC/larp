@@ -1,0 +1,124 @@
+{
+  "schema_version": "1.1",
+  "skill": "project-planner",
+  "status": "ready",
+  "title": "Publish a tutoring enquiry page over a month",
+  "summary": "Complete the offer and copy in week one, build the page in week two, test it in week three, and publish in week four. This is a broad timeline with no hourly allocations. Start by writing five bullets describing the tutoring offer.",
+  "assumptions": [
+    "You already have a suitable site-builder account.",
+    "The month is represented as four relative planning weeks because no start date was supplied."
+  ],
+  "questions": [],
+  "limitations": [
+    "The milestones are planning targets; capacity has not been assessed and no calendar time has been booked."
+  ],
+  "data": {
+    "goal": "Publish one page describing your maths tutoring and accepting enquiries.",
+    "success_criteria": [
+      "The page describes the students you help and the tutoring format.",
+      "The enquiry form successfully delivers a test enquiry.",
+      "The published page is readable on a phone."
+    ],
+    "time_budget_hours_per_week": null,
+    "time_budget_minutes_total": null,
+    "start_date": null,
+    "deadline": null,
+    "timezone": null,
+    "milestones": [
+      {
+        "id": "m1",
+        "title": "Page ready to test",
+        "done_when": "A draft page contains the offer, practical details, and enquiry form.",
+        "target_date": null,
+        "target_week": 2
+      },
+      {
+        "id": "m2",
+        "title": "Page published",
+        "done_when": "A test enquiry arrives and the mobile-checked page is published.",
+        "target_date": null,
+        "target_week": 4
+      }
+    ],
+    "tasks": [
+      {
+        "id": "t1",
+        "title": "Define the tutoring offer",
+        "milestone_id": "m1",
+        "depends_on": [],
+        "estimated_minutes": null,
+        "status": "planned",
+        "week": 1,
+        "deliverable": "Five bullets covering student level, subjects, lesson format, availability, and enquiry method."
+      },
+      {
+        "id": "t2",
+        "title": "Write the page copy",
+        "milestone_id": "m1",
+        "depends_on": [
+          "t1"
+        ],
+        "estimated_minutes": null,
+        "status": "planned",
+        "week": 1,
+        "deliverable": "A headline, short introduction, practical details, and enquiry invitation."
+      },
+      {
+        "id": "t3",
+        "title": "Build the draft page",
+        "milestone_id": "m1",
+        "depends_on": [
+          "t2"
+        ],
+        "estimated_minutes": null,
+        "status": "planned",
+        "week": 2,
+        "deliverable": "One draft page in the existing site builder with an enquiry form."
+      },
+      {
+        "id": "t4",
+        "title": "Test the enquiry form",
+        "milestone_id": "m2",
+        "depends_on": [
+          "t3"
+        ],
+        "estimated_minutes": null,
+        "status": "planned",
+        "week": 3,
+        "deliverable": "A received test enquiry and corrected form errors."
+      },
+      {
+        "id": "t5",
+        "title": "Check the mobile layout and copy",
+        "milestone_id": "m2",
+        "depends_on": [
+          "t3"
+        ],
+        "estimated_minutes": null,
+        "status": "planned",
+        "week": 3,
+        "deliverable": "A readable phone layout with checked contact details and working links."
+      },
+      {
+        "id": "t6",
+        "title": "Publish and verify the live page",
+        "milestone_id": "m2",
+        "depends_on": [
+          "t4",
+          "t5"
+        ],
+        "estimated_minutes": null,
+        "status": "planned",
+        "week": 4,
+        "deliverable": "A live URL and a successful enquiry submitted through the published page."
+      }
+    ],
+    "first_action": "Write the five bullets in t1 before opening the site builder.",
+    "deferred": [
+      "Paid advertising, a custom booking system, and additional pages are outside this launch scope."
+    ],
+    "planning_mode": "broad",
+    "horizon_weeks": 4,
+    "calendar_review": null
+  }
+}

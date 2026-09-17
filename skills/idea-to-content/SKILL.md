@@ -1,13 +1,13 @@
 ---
 name: idea-to-content
-description: Turn ideas or source material into social scripts and posts, with selectable writing styles and focused voice rewrites.
+description: Content Creation drafts or repurposes ideas and sources into scripts, posts and newsletters with conversational voice revisions.
 metadata:
-  version: "0.2.0"
+  version: "0.3.2"
 ---
 
-# Idea to Content
+# Idea to Content — Content Creation
 
-Turn an idea, pasted notes, or accessible source material into content the user can edit and publish. Use for drafting and repurposing; this skill does not provide a publishing or video-rendering integration.
+Content Creation drafts or repurposes ideas, notes and accessible sources. Hermes retrieves context and invokes connected tools; this skill guides writing and installs no publishing or video-rendering integration.
 
 ## Build the brief
 
@@ -19,7 +19,11 @@ Distinguish the audience's message from background constraints. Details such as 
 
 If an idea is available, make reasonable, explicitly labelled assumptions about missing preferences and draft immediately. If neither a topic nor usable source is available, ask one focused question for it. A source-only request with an inaccessible attachment or link needs its contents before faithful repurposing can begin; do not imply you read it.
 
-When no format is specified, prepare three distinct hooks, one selected angle, a 45–60 second vertical-video script, and two companion text posts, with a relevant call to action for each asset. Keep these platform-neutral unless the user's brief suggests a platform. These are defaults: explicit counts and formats override them. For text-only requests, produce text only; do not add filming instructions or video assets. A request for only the final drafts does not need a visible planning section.
+For an original idea with no format specified, prepare three distinct hooks, one selected angle, a 45–60 second vertical-video script, and two companion text posts, with a relevant call to action for each asset. Keep these platform-neutral unless the user's brief suggests a platform. For repurposing an existing source, use the defaults in the next section instead. These are defaults: explicit counts and formats override them. For text-only requests, produce text only; do not add filming instructions or video assets. A request for only the final drafts does not need a visible planning section.
+
+## Repurpose existing content conversationally
+
+Use the [repurposing guide](references/repurposing.md) when source plus outcome imply adaptation, even without “repurpose”, or for launch copy. Named platforms override defaults. With no source, create original content then adapt; brief facts alone do not imply repurposing. No form/mode is needed. Text and final voice share accepted task state; the host owns transcription, request IDs, persistence and stale-result handling.
 
 ## Resolve the writing style
 
@@ -54,10 +58,12 @@ Put optional filming, visuals, and timing in a separate **Production notes** sec
 
 Use the user's requested structure when supplied. See [the readable output example](references/readable-output.md) for a product-launch response with clear copy boundaries; adapt its presentation rather than reusing its wording or facts.
 
-For an explicit dashboard/JSON request, read [templates/output.schema.json](templates/output.schema.json) and return **only** one JSON object conforming to it: no Markdown fences or surrounding prose. [examples/example-output.json](examples/example-output.json) shows a complete response. Keep only finished publishable text in `data.assets[].content`: for video scripts this means the words to say, with no `SPOKEN` labels, camera directions, timing, or overlay instructions. Put video visuals and timing in `production_notes`, and any separate video caption in `caption`. An asset's title is an internal label unless explicitly requested in the copy. Keep the call to action in the finished copy; its separate `call_to_action` field identifies the same text for editing and must not be appended a second time by the UI. Put explanations in the brief, selected angle, assumptions, limitations, or review notes. Use empty arrays for optional lists with no entries and `null` for absent nullable values. Do not copy example facts into unrelated work.
+For an explicit dashboard/JSON request, read [templates/output.schema.json](templates/output.schema.json) and return **only** one JSON object conforming to it: no Markdown fences or surrounding prose. [examples/example-output.json](examples/example-output.json) shows a complete response. Keep only finished publishable text in `data.assets[].content`: for video scripts this means the words to say, with no `SPOKEN` labels, camera directions, timing, or overlay instructions. Put video visuals and timing in `production_notes`, and any separate video caption in `caption`. An asset's title is an internal label unless explicitly requested in the copy. A newsletter uses `format: "other"` and includes its complete `Subject: ...` line and body in `content`; the subject must not exist only in the internal title. Keep the call to action in the finished copy; its separate `call_to_action` field identifies the same text for editing and must not be appended a second time by the UI. Put explanations in the brief, selected angle, assumptions, limitations, or review notes. Use empty arrays for optional lists with no entries and `null` for absent nullable values. Do not copy example facts into unrelated work.
+
+Use the existing `summary` for one or two voice-friendly sentences identifying the prepared drafts and any essential limitation or question. Do not add speech fields, read the full pack unprompted, or claim saving, posting or scheduling. Full assets remain available for display and requested readback.
 
 - `ready`: the requested drafts are prepared; `questions` is empty. Reasonable disclosed assumptions do not require `partial`.
 - `partial`: useful drafts are prepared, but part of the requested work remains unavailable; include concrete `limitations`.
 - `needs_input`: missing essential input prevents a meaningful draft; set `data` to `null` and ask focused `questions`.
 
-An asset is a draft. Neither `ready` nor an activity update means content was posted, scheduled, researched, rendered, or exported. If the user also requests publishing or scheduling, use an available integration only within their authorization and report its observed outcome separately. When no integration is available, finish the drafts, state what remains, and use `partial` in JSON mode. Never fabricate activity, posting receipts, account access, or audience metrics.
+An asset is a draft. Neither `ready` nor an activity update means content was posted, scheduled, researched, rendered, or exported. For broader goals, use available host tools for clearly authorised dependent account/profile, publishing or scheduling actions without micro-prompts; report observed outcomes separately. If blocked, finish useful drafts, state outstanding actions, and use `partial` in JSON mode. Never fabricate activity, receipts, account access, or audience metrics.

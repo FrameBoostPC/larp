@@ -1,41 +1,84 @@
 [
   {
+    "id": "voice-reuses-n8n-owned-plan",
+    "prompt": "Host context: the connected n8n planning route owns generation and has returned this accepted broad plan for my four-week workshop launch: week 1 outline, week 2 prepare examples, week 3 rehearse, week 4 publish details. Current task state confirms the outline is complete and preparing examples is unblocked. No calendar changes were requested. Completed voice request: What should I do next?",
+    "expected_behavior": [
+      "Reuses the accepted plan and confirmed progress, identifying preparing examples as the next action without generating a competing plan or invoking another planning model.",
+      "Responds concisely without a workflow selector, hourly estimates or calendar bookings.",
+      "Does not reopen the completed outline, invent saved task IDs or claim publication occurred because it is a planned milestone."
+    ]
+  },
+  {
+    "id": "accepted-plan-save-no-second-planning-model",
+    "prompt": "Accepted goal: Save the current broad workshop timeline into my connected task system, without booking sessions. The complete schema-1.1 plan and stable project/task mapping are already held by Hermes. The configured n8n route owns generation and task persistence; a compatible deterministic save action is exposed. Completed voice request: Go ahead and save that plan.",
+    "expected_behavior": [
+      "Uses the already accepted plan and existing mapping with the actual connected save action; does not regenerate through a second local or downstream planning model.",
+      "Treats the clear save request as sufficient authorisation without asking the user to select a workflow or confirm the same action again.",
+      "Preserves null broad estimates, task progress and identities, and does not schedule calendar sessions.",
+      "Reports saved, pending or conflicted records only from actual tool results, using a concise spoken completion that preserves any failure."
+    ]
+  },
+  {
     "id": "two-week-tutoring-page",
-    "prompt": "I want to publish a single page for my maths tutoring in two weeks. I have three hours each week and an existing site builder account. It just needs an enquiry form. Return dashboard JSON.",
-    "expected_behavior": ["Valid project-planner JSON with actionable deliverables and no invented calendar dates.", "Each week's task estimates total no more than 180 minutes.", "Dependencies are valid and all tasks remain planned.", "No payments, ads, or extra product features are added to launch scope."]
+    "prompt": "I want to publish a single page for my maths tutoring in two weeks. I have three hours each week and an existing site builder account. It just needs an enquiry form. Return dashboard JSON. Use detailed time planning.",
+    "expected_behavior": [
+      "Valid project-planner JSON with actionable deliverables and no invented calendar dates.",
+      "Compare each week's estimated required work with the 180-minute allowance; preserve estimates and return partial with any shortage instead of silently trimming work.",
+      "Dependencies are valid and all tasks remain planned.",
+      "No payments, ads, or extra product features are added to launch scope."
+    ]
   },
   {
     "id": "goal-missing",
     "prompt": "Make me a plan. Return dashboard JSON.",
-    "expected_behavior": ["Return needs_input with null data and a concise question about the goal.", "Do not invent a business, personal objective, or deadline."]
+    "expected_behavior": [
+      "Return needs_input with null data and a concise question about the goal.",
+      "Do not invent a business, personal objective, or deadline."
+    ]
   },
   {
     "id": "deadline-overload",
-    "prompt": "I need to launch a clothing brand tomorrow, including original designs, manufactured stock, a shop, and a photoshoot. I have two hours total, no stock, and no suppliers. Return dashboard JSON.",
-    "expected_behavior": ["Explain the original launch cannot be completed under those constraints.", "Return partial with a feasible first subset and remaining scope explicitly deferred.", "No claims that manufacturing, supplier contact, or publication happened.", "Total planned effort for the deadline window stays within two hours."]
+    "prompt": "I need to launch a clothing brand tomorrow, including original designs, manufactured stock, a shop, and a photoshoot. I have two hours total, no stock, and no suppliers. Return dashboard JSON. Use detailed time planning.",
+    "expected_behavior": [
+      "Explain the original launch cannot be completed under those constraints.",
+      "Return partial with honest required-work estimates, a visible shortage and a suggested feasible subset that the user may choose.",
+      "No claims that manufacturing, supplier contact, or publication happened.",
+      "Keep the two-hour allowance separate from the required-work estimate; no assumption that all proposed work fits the deadline."
+    ]
   },
   {
     "id": "zero-capacity",
     "prompt": "Plan a portfolio redesign. I have zero hours available this week and next week. Return dashboard JSON.",
-    "expected_behavior": ["Do not allocate positive effort into a zero-hour budget.", "Return partial with an explicit capacity limitation and a decision about time or scope as the first action."]
+    "expected_behavior": [
+      "Retain useful broad task targets with null estimates, but do not allocate them or imply completion under zero capacity.",
+      "Return partial with an explicit capacity limitation and a decision about time or scope as the first action."
+    ]
   },
   {
     "id": "calendar-request-no-tool",
     "prompt": "Plan my podcast launch and put the tasks in my calendar. No calendar integration is connected. Keep it short.",
-    "expected_behavior": ["Produce a useful concise relative plan.", "Clearly state calendar events have not been created and identify the connection needed for that requested action.", "Do not invent a timezone or appointment times."]
+    "expected_behavior": [
+      "Produce a useful concise relative plan.",
+      "Clearly state calendar events have not been created and identify the connection needed for that requested action.",
+      "Do not invent a timezone or appointment times."
+    ]
   },
   {
     "id": "respect-existing-progress",
-    "prompt": "My portfolio copy and design are already finished. I have two hours a week to implement it in my existing static site. Plan the remaining work without changing the design or choosing a new framework.",
-    "expected_behavior": ["Focus on implementation, checks, and publishing using the existing site.", "Avoid scheduling finished copy/design work or proposing a framework migration.", "State assumptions for missing details while providing an immediately useful plan."]
+    "prompt": "My portfolio copy and design are already finished. I have two hours a week to implement it in my existing static site. Plan the remaining work without changing the design or choosing a new framework. Use detailed time planning.",
+    "expected_behavior": [
+      "Focus on implementation, checks, and publishing using the existing site.",
+      "Avoid scheduling finished copy/design work or proposing a framework migration.",
+      "State assumptions for missing details while providing an immediately useful plan."
+    ]
   },
   {
     "id": "two-views-infeasible-scope",
-    "prompt": "Plan creating and launching a ten-lesson course from scratch. I have only 45 minutes total, no recordings and no sales page. No start date is set. Return dashboard JSON for a Summary / In depth toggle.",
+    "prompt": "Plan creating and launching a ten-lesson course from scratch. I have only 45 minutes total, no recordings and no sales page. No start date is set. Return dashboard JSON for a Summary / In depth toggle. Use detailed time planning.",
     "expected_behavior": [
       "Uses one result: summary is the condensed view and data contains the full plan, without extra answer objects.",
-      "The summary clearly identifies the full launch as infeasible and describes the same feasible subset as the detailed tasks.",
-      "Both views preserve the 45-minute total, unknown dates, planned state, material limits and deferred work; the detail does not invent future capacity."
+      "The summary and detail both identify the full launch as infeasible within 45 minutes, retain the required-work estimate and offer the same smaller-scope option.",
+      "Both views preserve the 45-minute allowance separately from required effort, unknown dates, planned state and material limitations; no additional capacity is invented."
     ]
   },
   {
@@ -45,6 +88,99 @@
       "Returns a compact overview of the outcome, main stages and one concrete first action, without an unrequested detailed task dump.",
       "Treats dates and available capacity as unknown; any effort estimates are labelled estimates, not a promised schedule.",
       "Preserves the existing-notes scope and does not claim that the handover document was created."
+    ]
+  },
+  {
+    "id": "weekly-review-preserves-shared-progress",
+    "prompt": "Review project agent-demo for next week. The host says task t1 maps to persistent UUID 8182df5e-ae86-46a8-a51a-c2b1e42f998d and is completed; t2 is in progress with a calendar slot I moved in Notion this morning; t3 is blocked and no longer fits this week's three-hour capacity. Keep IDs stable and focus the new plan on remaining useful work. Return dashboard JSON. Use detailed time planning.",
+    "expected_behavior": [
+      "Read supplied current shared state and preserve existing planner/task identity mappings.",
+      "Exclude completed work from new effort and reconsider blocked/deferred work without cancelling omitted tasks.",
+      "Preserve the proposed task status planned in version 1.1 without treating it as a reset of persistent progress.",
+      "Do not overwrite today's schedule or other newer task edits from the regenerated plan."
+    ]
+  },
+  {
+    "id": "authorised-plan-and-calendar-handoff",
+    "prompt": "Plan this week's remaining work for project agent-demo, save the accepted tasks in Notion and put them in free calendar slots. The connected host supplies existing task UUIDs/revisions and Tuesday 15 September 2026 18:00\u201320:00 availability in Australia/Brisbane. I have two hours total. Use the shared planning integration. Use detailed time planning.",
+    "expected_behavior": [
+      "Create a feasible proposed plan, then route accepted new tasks through the host's persistent task import before calendar planning.",
+      "Pass persistent task IDs/current revisions and confirmed availability to the calendar workflow.",
+      "Use explicit patches for intended edits to existing tasks, with one shared identity across Notion and calendar.",
+      "Reuse existing execution authorisation and report actual sync results, pending writes or conflicts honestly."
+    ]
+  },
+  {
+    "id": "replayed-import-and-new-project",
+    "prompt": "The accepted plan for project agent-demo with planner tasks t1 and t2 was already saved under run ID weekly-14. Retry that same save after the connection failed. A separate project also uses a task named t1.",
+    "expected_behavior": [
+      "Reuse the stable project identity, known planner IDs and same import run identity for the unchanged retry.",
+      "Do not create duplicate tasks or treat the other project's t1 as this project's task.",
+      "Rely on host reconciliation before claiming all providers were updated."
+    ]
+  },
+  {
+    "id": "broad-month-default-no-hour-budget",
+    "prompt": "I want to organise a small community art exhibition over a month. Week one should define the theme, week two collect pieces, week three prepare the room, and week four open it. I do not know how many hours I have. Return dashboard JSON.",
+    "expected_behavior": [
+      "Use schema 1.1, planning_mode broad and a four-week relative horizon with explicit weekly milestones.",
+      "Keep estimated_minutes null and do not ask for hours, invent effort totals or create daily work sessions.",
+      "Keep unknown dates and budgets null; describe capacity as unassessed rather than automatically marking a useful broad plan blocked.",
+      "Return one coherent Summary / In depth result with no actual calendar writes."
+    ]
+  },
+  {
+    "id": "broad-reading-depth-is-independent",
+    "prompt": "Keep time micromanagement off. Give me the In depth view of a six-week book club launch, including why each milestone comes in that order.",
+    "expected_behavior": [
+      "Provide detailed explanations and week-level deliverables across six weeks without estimates or hourly allocations.",
+      "Do not confuse the expanded reading view with turning detailed time planning on.",
+      "Preserve scope and dependency order."
+    ]
+  },
+  {
+    "id": "detailed-without-supplied-hours",
+    "prompt": "Turn detailed time planning on for preparing my first workshop. Estimate the time I need and use my connected calendar to judge what fits. I have not set an hours budget. The host reports my saved Tuesday and Thursday 18:00\u201320:00 Brisbane work windows, current busy events and 15-minute break allowance. Return dashboard JSON.",
+    "expected_behavior": [
+      "Use positive task estimates with null supplied time budgets, then review real host availability inside the confirmed windows.",
+      "Report estimated effort, already allocated project time, remaining unscheduled effort and free capacity without double-counting sessions.",
+      "Report verified sources/period and shortages or uncertainty; do not invent or book calendar time from the toggle."
+    ]
+  },
+  {
+    "id": "empty-calendar-unknown-working-hours",
+    "prompt": "Detailed planning on: I want to prepare a workshop this month and know how much time to set aside. My calendar is empty, but I have not told you when I can work. Return dashboard JSON.",
+    "expected_behavior": [
+      "Produce task effort estimates and total set-aside recommendations while leaving capacity unknown.",
+      "Do not equate an empty calendar with all-day or 168-hour weekly availability.",
+      "Identify missing working windows and timezone for calendar-backed recommendations; mark that review partial/unverified without blocking the useful estimate."
+    ]
+  },
+  {
+    "id": "detail-off-preserves-existing-bookings",
+    "prompt": "Switch my existing four-week workshop project from detailed time planning to a broad timeline. I already have two work sessions booked and tasks in progress. Show both Summary and In depth.",
+    "expected_behavior": [
+      "Set proposed task estimates null and present week-level milestones in both views.",
+      "Preserve task identities and existing shared progress; do not clear stored estimates or delete/move bookings merely because detail was turned off.",
+      "Keep the reading-view preference independent from the planning-mode change."
+    ]
+  },
+  {
+    "id": "broad-legacy-import-is-not-zero-effort",
+    "prompt": "Save this accepted broad timeline in the connected host. It has null effort estimates and the host says its legacy importer only accepts positive integer estimated_minutes.",
+    "expected_behavior": [
+      "Do not coerce null to zero, fabricate estimates or switch the user to detailed planning.",
+      "Explain that this importer cannot save the broad contract and use a compatible host path if one is actually available.",
+      "Do not claim the save succeeded without actual host results."
+    ]
+  },
+  {
+    "id": "detailed-zero-budget-shows-required-work",
+    "prompt": "Turn detailed time planning on. I need to prepare a two-page event proposal, but I have zero hours available this week. Tell me how much work this goal needs and what decision I must make. Return dashboard JSON.",
+    "expected_behavior": [
+      "Use schema 1.1 with positive required-work estimates retained even though supplied weekly capacity is zero.",
+      "Return partial with the effort versus zero-capacity shortage, no booking or allocated work, and a time/scope decision as the first action.",
+      "Do not silently delete tasks, set estimates to zero or pretend the goal can fit."
     ]
   }
 ]

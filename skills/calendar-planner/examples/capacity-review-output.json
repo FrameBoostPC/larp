@@ -1,0 +1,66 @@
+{
+  "schema_version": "1.1",
+  "skill": "calendar-planner",
+  "status": "partial",
+  "title": "Capacity review for a six-hour project",
+  "summary": "The chosen weekday evening windows contain four available hours after recorded commitments and breaks. The six-hour estimate exceeds that capacity by two hours; reduce scope or extend the timeline. No time has been booked.",
+  "assumptions": [
+    "This fictional example uses user-confirmed Monday to Friday 18:00\u201320:00 work windows and a 15-minute break allowance per window."
+  ],
+  "questions": [],
+  "limitations": [
+    "The complete six-hour goal does not fit the reviewed period."
+  ],
+  "data": {
+    "project_id": null,
+    "intent": "review",
+    "operations": [],
+    "deferred": [
+      "Two hours of estimated work require a later week or an explicit change of availability."
+    ],
+    "first_action": "Choose which deliverable to defer or extend the target week.",
+    "calendar_review": {
+      "status": "checked",
+      "checked_at": "2026-09-20T16:00:00+10:00",
+      "timezone": "Australia/Brisbane",
+      "window_start": "2026-09-21",
+      "window_end": "2026-09-25",
+      "sources": [
+        "Fictional connected Schedule & Tasks calendar"
+      ],
+      "working_windows": [
+        {
+          "weekday": 1,
+          "start": "18:00",
+          "end": "20:00"
+        },
+        {
+          "weekday": 2,
+          "start": "18:00",
+          "end": "20:00"
+        },
+        {
+          "weekday": 3,
+          "start": "18:00",
+          "end": "20:00"
+        },
+        {
+          "weekday": 4,
+          "start": "18:00",
+          "end": "20:00"
+        },
+        {
+          "weekday": 5,
+          "start": "18:00",
+          "end": "20:00"
+        }
+      ],
+      "buffer_minutes": 15,
+      "available_minutes": 240,
+      "already_allocated_minutes": 0,
+      "unscheduled_effort_minutes": 360,
+      "shortfall_minutes": 120,
+      "limitations": []
+    }
+  }
+}

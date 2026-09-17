@@ -85,13 +85,19 @@ export class ContentPreferences extends HTMLElement {
       if (token !== this._inputToken || !this.isConnected || (options.captureToken !== undefined && options.captureToken !== this._captureToken)) return { status: 'superseded' };
       if (!intent || !['settings', 'generate', 'rewrite', 'clarify'].includes(intent.action)) throw new Error('The instruction could not be interpreted.');
       if (intent.action === 'clarify') { this.message(intent.message || 'Please clarify the writing voice.', true); return { status: 'clarify' }; }
+      // A content action with no preference changes still belongs to the state
+      // at capture time. Do not let delayed speech generate after a newer choice.
+      if (intent.action !== 'settings' && Object.keys(intent.patch).length === 0 && this.preferences.revision !== baseRevision) {
+        this.message('A newer choice changed this request. Repeat your instruction to use it now.', true);
+        return { status: 'conflict' };
+      }
       const result = this.setPreferences(intent.patch, { source, baseRevision, eventId });
       if (token !== this._inputToken || this.store !== originalStore || !this.isConnected) return { status: 'superseded' };
       if (['conflict', 'duplicate'].includes(result.status)) return result;
       this.message(Object.keys(intent.patch).length ? `Set to ${this.describe()}.` : (intent.message || `Current selection: ${this.describe()}.`));
       this._pendingInput = null;
       this.syncRequestAvailability();
-      if (intent.action !== 'settings') this.requestContent(intent.action, { source, instruction: text, eventId });
+      if (intent.action !== 'settings') this.requestContent(intent.action, { source, instruction: text, eventId, contentCommand: intent.contentCommand === true });
       return result;
     } catch (error) {
       if (token === this._inputToken) this.message(error.message || 'Could not apply that instruction. Try again.', true);
@@ -165,6 +171,15 @@ export class ContentPreferences extends HTMLElement {
     if (!button) return;
     button.disabled = Boolean(this._pendingInput || this._voiceActive || this.hasAttribute('busy'));
     button.textContent = this.getAttribute('action-label') || 'Prepare request';
+  }
+
+  // Hosts call this when the source brief changes outside the preference store.
+  // Both unfinished transcription and model-backed interpretation lose their scope.
+  invalidateInput() {
+    this.cancelVoice();
+    this._inputToken++;
+    this._pendingInput = null;
+    this.syncRequestAvailability();
   }
   describe() { const v = this.preferences.values; return [v.tone, v.intensity, v.wording].map(x => x[0].toUpperCase() + x.slice(1)).join(' · '); }
   message(text, error = false) { const el = this.shadowRoot.querySelector('.status'); if (el) { el.textContent = text; el.dataset.error = String(error); } }

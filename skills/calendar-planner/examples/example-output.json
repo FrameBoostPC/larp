@@ -1,0 +1,24 @@
+{
+  "schema_version": "1.0",
+  "skill": "calendar-planner",
+  "status": "ready",
+  "title": "Move the walkthrough recording to Tuesday evening",
+  "summary": "Move the existing one-hour walkthrough task to Tuesday 15 September, 6–7 pm in Australia/Brisbane. The supplied calendar availability is free then, and the task's dependencies are completed. Its due date and progress stay unchanged. This is a prepared change; execution and provider sync have not yet been confirmed.",
+  "assumptions": ["The host supplied this project's persistent task identity, revision 3, completed dependencies and current calendar availability.", "The user's requested date is 15 September 2026 and their confirmed timezone is Australia/Brisbane."],
+  "questions": [],
+  "limitations": ["The proposal does not prove a Notion or calendar update succeeded; the host must apply it and report sync results."],
+  "data": {
+    "project_id": "agent-demo",
+    "operations": [
+      {
+        "task_id": "8182df5e-ae86-46a8-a51a-c2b1e42f998d",
+        "expected_revision": 3,
+        "action": "schedule",
+        "patch": {"schedule": {"start": "2026-09-15T18:00:00+10:00", "end": "2026-09-15T19:00:00+10:00", "timezone": "Australia/Brisbane"}},
+        "reason": "The user requested this move and the supplied availability contains a free one-hour slot."
+      }
+    ],
+    "deferred": [],
+    "first_action": "Apply this authorised move through the host's shared task integration using a stable request identity, then check both provider sync results."
+  }
+}

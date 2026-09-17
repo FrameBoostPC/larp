@@ -1,6 +1,6 @@
 # Content preferences component
 
-A framework-neutral `<content-preferences>` custom element for Idea to Content, plus a local generation prototype. The element owns selectors and input events; the Python server calls a separately configured model and validates its result. Both remain separate from the installable Hermes skill folders. Your partner can reuse the controls and output schema with a different model or their Hermes backend.
+A framework-neutral `<content-preferences>` custom element for **Content Creation**, using the stable `idea-to-content` skill, plus a local generation prototype. The element owns selectors and input events; the Python server calls a separately configured model and validates its result. Both remain separate from the installable Hermes skill folders. Your partner can reuse the controls and output schema with a different model or their Hermes backend. Install the [shared Hermes setup](../hermes-orchestration/README.md) on that host to obtain the common skill/tool orchestration policy; this preview remains a direct model client.
 
 ## Run the preview
 
@@ -47,7 +47,39 @@ If a hosted endpoint needs credentials, set `api_key_env` to the name of a serve
 
 The prototype binds to `127.0.0.1`, serves only its own UI files, checks request origins and validates outputs against the existing skill schema and semantic checks. It is a local development server, not the partner's authenticated multi-user application. It has no web research tools, publishing, saved profiles or permanent draft storage. Content stays in the current page unless copied; model output is a draft to review.
 
-The backend expects this repository's `skills/idea-to-content` and `scripts/validate.py` paths. Keep the repository checkout intact when running it. Frontend integration can copy only the browser modules/styles; the partner can replace `POST /api/generate` with their Hermes integration. The prototype request contains `brief`, `preferenceContext`, `action`, optional `instruction`, and `previousResult` for rewrites. A successful response contains the validated skill `result` plus `model` and `provider`; failures contain a readable `error`. `GET /api/model` reports configuration and busy status, not proof the model is installed or reachable.
+## Create and repurpose through the same request
+
+Idea to Content handles both new ideas and existing source material. Paste notes,
+an article or a transcript into the brief, then say or type a clear request such
+as “Repurpose this into a LinkedIn post and a newsletter.” You can also supply the
+source in the request itself. There is no required mode selector. A generic
+repurposing request uses the skill's LinkedIn/short-post/newsletter pack; specific
+formats and counts override it. Only available source text can be used: the local
+model cannot open links or listen to uploaded media.
+
+The local preview routes clear content commands from the instruction box or a
+completed microphone transcript to the same generation call. Its simple command
+router is separate from the conservative writing-preference parser. Interim
+speech does not generate drafts, duplicate events are ignored, and newer accepted
+input makes older results stale. Existing-draft requests pass the real previous
+result; original source context stays separate from that generated copy.
+
+The generation response includes `spoken_summary` alongside the unchanged
+schema-1.0 `result`, `model` and `provider`. Missing-input speech asks the essential
+question; partial results mention their limitation. The preview displays this
+completion text; Hermes should speak it through its existing audio layer after
+checking the request is still current. Full conversational source/target resolution,
+readback without regeneration and actual spoken playback belong to that host.
+The separate n8n repurposing workflow is archived; this feature does not call it
+or automatically save new drafts into its Workbench.
+
+The default local gpt-oss:20b model failed two source-fidelity acceptance runs:
+it presented a fictional exercise as a completed event and missed newsletter
+length constraints. Treat its output as drafts requiring source review, not a
+validated production repurposing service. See [validation evidence](../../docs/validation.md#unified-content-creation-and-repurposing--2026-09-16)
+and run the behavioural cases with the partner's intended model.
+
+The backend expects this repository's `skills/idea-to-content` and `scripts/validate.py` paths. Keep the repository checkout intact when running it. It loads the skill, writing styles and repurposing guide together. Frontend integration can copy only the browser modules/styles; the partner can replace `POST /api/generate` with their Hermes integration. The prototype request contains `brief`, `preferenceContext`, `action`, optional `instruction`, and `previousResult` for rewrites. A successful response contains the validated skill `result` plus `spoken_summary`, `model` and `provider`; failures contain a readable `error`. `GET /api/model` reports configuration and busy status, not proof the model is installed or reachable.
 
 The offline interpreter recognises complete, simple commands such as `Tone: educational`, `Emotional and calm`, `Make this emotional, but keep it subtle`, `Make it a little less intense`, and `Custom: warm, dry humour, no jargon`. Unrecognised, conflicting or compound instructions are reported without partially applying them. For example, `Make it emotional but no slang` requires the Custom voice field or the host interpreter. It is deliberately not a general language model. Existing custom directions survive preset changes; an explicit `Custom:` instruction replaces the previous custom description.
 

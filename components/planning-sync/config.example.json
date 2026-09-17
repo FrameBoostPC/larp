@@ -1,0 +1,22 @@
+{
+  "state_path": "planning-sync.sqlite3",
+  "notion": {
+    "data_source_id": "REPLACE_WITH_CONFIGURED_NOTION_DATA_SOURCE_ID",
+    "token_env": "NOTION_TOKEN",
+    "properties": {
+      "sync_id": "Sync ID",
+      "title": "Name",
+      "status": "Status",
+      "project_id": "Project ID",
+      "estimated_minutes": "Estimated minutes",
+      "deliverable": "Deliverable",
+      "depends_on": "Depends on IDs",
+      "week": "Week",
+      "due_date": "Due date",
+      "schedule": "Scheduled time",
+      "schedule_timezone": "Timezone",
+      "operation_id": "Sync operation"
+    }
+  },
+  "calendar": null
+}

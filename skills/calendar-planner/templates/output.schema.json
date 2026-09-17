@@ -1,6 +1,6 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "title": "Project Planner Result",
+  "title": "Calendar Planner Result",
   "type": "object",
   "additionalProperties": false,
   "required": [
@@ -22,7 +22,7 @@
       ]
     },
     "skill": {
-      "const": "project-planner"
+      "const": "calendar-planner"
     },
     "status": {
       "enum": [
@@ -53,7 +53,7 @@
           "type": "null"
         },
         {
-          "$ref": "#/$defs/plan"
+          "$ref": "#/$defs/proposal"
         }
       ]
     }
@@ -70,12 +70,7 @@
       "then": {
         "properties": {
           "data": {
-            "type": "object",
-            "properties": {
-              "tasks": {
-                "minItems": 1
-              }
-            }
+            "type": "object"
           },
           "questions": {
             "maxItems": 0
@@ -133,25 +128,11 @@
         "properties": {
           "data": {
             "properties": {
-              "planning_mode": false,
-              "horizon_weeks": false,
-              "calendar_review": false,
-              "tasks": {
-                "items": {
-                  "properties": {
-                    "estimated_minutes": {
-                      "type": "integer"
-                    }
-                  }
-                }
+              "project_id": {
+                "type": "string"
               },
-              "milestones": {
-                "items": {
-                  "properties": {
-                    "target_week": false
-                  }
-                }
-              }
+              "intent": false,
+              "calendar_review": false
             }
           }
         }
@@ -169,40 +150,27 @@
         "properties": {
           "data": {
             "required": [
-              "planning_mode",
-              "horizon_weeks"
+              "intent"
             ],
-            "properties": {
-              "milestones": {
-                "items": {
-                  "required": [
-                    "target_week"
-                  ]
-                }
-              }
-            },
             "allOf": [
               {
                 "if": {
                   "properties": {
-                    "planning_mode": {
-                      "const": "broad"
+                    "intent": {
+                      "const": "review"
                     }
                   }
                 },
                 "then": {
+                  "required": [
+                    "calendar_review"
+                  ],
                   "properties": {
-                    "tasks": {
-                      "items": {
-                        "properties": {
-                          "estimated_minutes": {
-                            "type": "null"
-                          }
-                        }
-                      }
-                    },
                     "calendar_review": {
-                      "type": "null"
+                      "type": "object"
+                    },
+                    "operations": {
+                      "maxItems": 0
                     }
                   }
                 }
@@ -210,21 +178,15 @@
               {
                 "if": {
                   "properties": {
-                    "planning_mode": {
-                      "const": "detailed"
+                    "intent": {
+                      "const": "changes"
                     }
                   }
                 },
                 "then": {
                   "properties": {
-                    "tasks": {
-                      "items": {
-                        "properties": {
-                          "estimated_minutes": {
-                            "type": "integer"
-                          }
-                        }
-                      }
+                    "project_id": {
+                      "type": "string"
                     }
                   }
                 }
@@ -243,67 +205,55 @@
         "minLength": 1
       }
     },
-    "date": {
-      "type": [
-        "string",
-        "null"
-      ],
-      "format": "date"
+    "taskId": {
+      "type": "string",
+      "format": "uuid"
     },
-    "milestone": {
+    "schedule": {
       "type": "object",
       "additionalProperties": false,
       "required": [
-        "id",
-        "title",
-        "done_when",
-        "target_date"
+        "start",
+        "end",
+        "timezone"
       ],
       "properties": {
-        "id": {
+        "start": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "end": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "timezone": {
           "type": "string",
           "minLength": 1
-        },
-        "title": {
-          "type": "string",
-          "minLength": 1
-        },
-        "done_when": {
-          "type": "string",
-          "minLength": 1
-        },
-        "target_date": {
-          "$ref": "#/$defs/date"
-        },
-        "target_week": {
-          "type": "integer",
-          "minimum": 1
         }
       }
     },
-    "task": {
+    "taskPatch": {
       "type": "object",
       "additionalProperties": false,
-      "required": [
-        "id",
-        "title",
-        "milestone_id",
-        "depends_on",
-        "estimated_minutes",
-        "status",
-        "week",
-        "deliverable"
-      ],
+      "minProperties": 1,
       "properties": {
-        "id": {
-          "type": "string",
-          "minLength": 1
-        },
         "title": {
           "type": "string",
           "minLength": 1
         },
-        "milestone_id": {
+        "status": {
+          "enum": [
+            "planned",
+            "in_progress",
+            "completed",
+            "cancelled"
+          ]
+        },
+        "estimated_minutes": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "deliverable": {
           "type": "string",
           "minLength": 1
         },
@@ -311,117 +261,169 @@
           "type": "array",
           "uniqueItems": true,
           "items": {
-            "type": "string",
-            "minLength": 1
+            "$ref": "#/$defs/taskId"
           }
-        },
-        "estimated_minutes": {
-          "type": [
-            "integer",
-            "null"
-          ],
-          "minimum": 1
-        },
-        "status": {
-          "const": "planned"
         },
         "week": {
           "type": "integer",
           "minimum": 1
         },
-        "deliverable": {
-          "type": "string",
-          "minLength": 1
+        "due_date": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "format": "date"
+        },
+        "schedule": {
+          "oneOf": [
+            {
+              "type": "null"
+            },
+            {
+              "$ref": "#/$defs/schedule"
+            }
+          ]
         }
       }
     },
-    "plan": {
+    "operation": {
       "type": "object",
       "additionalProperties": false,
       "required": [
-        "goal",
-        "success_criteria",
-        "time_budget_hours_per_week",
-        "time_budget_minutes_total",
-        "start_date",
-        "deadline",
-        "timezone",
-        "milestones",
-        "tasks",
-        "first_action",
-        "deferred"
+        "task_id",
+        "expected_revision",
+        "action",
+        "patch",
+        "reason"
       ],
       "properties": {
-        "goal": {
+        "task_id": {
+          "$ref": "#/$defs/taskId"
+        },
+        "expected_revision": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "action": {
+          "enum": [
+            "schedule",
+            "unschedule",
+            "update_task"
+          ]
+        },
+        "patch": {
+          "type": "object"
+        },
+        "reason": {
           "type": "string",
           "minLength": 1
-        },
-        "success_criteria": {
-          "type": "array",
-          "minItems": 1,
-          "items": {
-            "type": "string",
-            "minLength": 1
+        }
+      },
+      "allOf": [
+        {
+          "if": {
+            "properties": {
+              "action": {
+                "const": "schedule"
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "patch": {
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                  "schedule"
+                ],
+                "properties": {
+                  "schedule": {
+                    "$ref": "#/$defs/schedule"
+                  }
+                }
+              }
+            }
           }
         },
-        "time_budget_hours_per_week": {
-          "type": [
-            "number",
-            "null"
-          ],
-          "minimum": 0,
-          "maximum": 168
+        {
+          "if": {
+            "properties": {
+              "action": {
+                "const": "unschedule"
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "patch": {
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                  "schedule"
+                ],
+                "properties": {
+                  "schedule": {
+                    "type": "null"
+                  }
+                }
+              }
+            }
+          }
         },
-        "time_budget_minutes_total": {
-          "type": [
-            "integer",
-            "null"
-          ],
-          "minimum": 0
-        },
-        "start_date": {
-          "$ref": "#/$defs/date"
-        },
-        "deadline": {
-          "$ref": "#/$defs/date"
-        },
-        "timezone": {
+        {
+          "if": {
+            "properties": {
+              "action": {
+                "const": "update_task"
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "patch": {
+                "$ref": "#/$defs/taskPatch"
+              }
+            }
+          }
+        }
+      ]
+    },
+    "proposal": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "project_id",
+        "operations",
+        "deferred",
+        "first_action"
+      ],
+      "properties": {
+        "project_id": {
           "type": [
             "string",
             "null"
           ],
           "minLength": 1
         },
-        "milestones": {
+        "operations": {
           "type": "array",
-          "minItems": 1,
           "items": {
-            "$ref": "#/$defs/milestone"
+            "$ref": "#/$defs/operation"
           }
         },
-        "tasks": {
-          "type": "array",
-          "items": {
-            "$ref": "#/$defs/task"
-          }
+        "deferred": {
+          "$ref": "#/$defs/strings"
         },
         "first_action": {
           "type": "string",
           "minLength": 1
         },
-        "deferred": {
-          "$ref": "#/$defs/strings"
-        },
-        "planning_mode": {
+        "intent": {
           "enum": [
-            "broad",
-            "detailed"
+            "review",
+            "changes"
           ]
-        },
-        "horizon_weeks": {
-          "type": "integer",
-          "minimum": 1,
-          "maximum": 104
         },
         "calendar_review": {
           "oneOf": [

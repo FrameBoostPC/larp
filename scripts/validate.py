@@ -6,11 +6,14 @@ from __future__ import annotations
 import argparse
 import json
 import re
+import runpy
 import sys
 from collections import defaultdict, deque
+from datetime import date, datetime, timedelta
 from decimal import Decimal
 from pathlib import Path
 from urllib.parse import unquote, urlsplit
+from zoneinfo import ZoneInfo, ZoneInfoNotFoundError
 
 try:
     import yaml
@@ -193,8 +196,12 @@ def load_schema(skill_dir: Path, errors: list[str]):
     version_property = properties.get("schema_version", {})
     if not isinstance(skill_property, dict) or skill_property.get("const") != skill_dir.name:
         errors.append(f"{label(path)}: properties.skill.const must be {skill_dir.name!r}")
-    if not isinstance(version_property, dict) or version_property.get("const") != "1.0":
-        errors.append(f"{label(path)}: properties.schema_version.const must be '1.0'")
+    legacy_version = isinstance(version_property, dict) and version_property.get("const") == "1.0"
+    planning_versions = (skill_dir.name in {"project-planner", "calendar-planner"}
+                         and isinstance(version_property, dict)
+                         and version_property.get("enum") == ["1.0", "1.1"])
+    if not (legacy_version or planning_versions):
+        errors.append(f"{label(path)}: schema_version must declare 1.0, or the supported planning versions ['1.0', '1.1']")
     if len(errors) != before:
         return None
     return schema
@@ -241,27 +248,132 @@ def check_semantics(output: dict, path: Path, errors: list[str]) -> None:
         for index, asset in enumerate(data["assets"]):
             if asset["hook_id"] is not None and asset["hook_id"] not in hooks:
                 errors.append(f"{prefix}.assets[{index}].hook_id: unknown hook {asset['hook_id']!r}")
-    elif output["skill"] == "research-brief":
-        index_ids(data["findings"], "findings", path, errors)
-        sources = index_ids(data["sources"], "sources", path, errors)
-        # Reader-facing narrative strings use individual [source-N] tokens.
-        # Check identity only: factual support and missing citations need review.
-        narratives = [("$.summary", output["summary"]), ("$.data.answer", data["answer"])]
-        for field in ("conflicts", "next_actions"):
-            narratives.extend((f"$.data.{field}[{index}]", value) for index, value in enumerate(data[field]))
-        for field, value in narratives:
-            for source_id in re.findall(r"\[(source-[^\]\n]+)\]", value):
-                if source_id not in sources:
-                    errors.append(f"{label(path)}: {field}: unknown inline source {source_id!r}")
-        for index, finding in enumerate(data["findings"]):
-            for source_id in finding["source_ids"]:
-                if source_id not in sources:
-                    errors.append(f"{prefix}.findings[{index}].source_ids: unknown source {source_id!r}")
     elif output["skill"] == "project-planner":
-        check_plan(data, path, errors)
+        check_plan(data, path, errors, version=output["schema_version"], status=output["status"])
+    elif output["skill"] == "calendar-planner":
+        check_calendar(data, path, errors)
+    if output["skill"] in {"project-planner", "calendar-planner"} and data.get("calendar_review") is not None:
+        check_calendar_review(data["calendar_review"], output["status"], path, errors)
 
 
-def check_plan(data: dict, path: Path, errors: list[str]) -> None:
+def check_calendar_review(review: dict, status: str, path: Path, errors: list[str]) -> None:
+    """Check reported arithmetic and bounds, without pretending to verify live sources."""
+    prefix = f"{label(path)}: $.data.calendar_review"
+    if review["status"] in {"partial", "unavailable"} and status == "ready":
+        errors.append(f"{prefix}.status: incomplete requested calendar review requires a partial result")
+    available, effort, shortage = (review[key] for key in ("available_minutes", "unscheduled_effort_minutes", "shortfall_minutes"))
+    if available is not None and effort is not None:
+        expected = max(0, effort - available)
+        if shortage != expected:
+            errors.append(f"{prefix}.shortfall_minutes: must equal max(0, unscheduled effort minus available capacity)")
+        if expected > 0 and status == "ready":
+            errors.append(f"{prefix}.shortfall_minutes: a capacity shortage requires a partial result")
+    elif shortage is not None:
+        errors.append(f"{prefix}.shortfall_minutes: unknown effort or availability requires an unknown shortage")
+    zone = None
+    if review["timezone"] is not None:
+        try:
+            zone = ZoneInfo(review["timezone"])
+        except (ZoneInfoNotFoundError, ValueError):
+            errors.append(f"{prefix}.timezone: unknown IANA timezone or missing tzdata")
+    windows: dict[int, list[tuple[int, int]]] = defaultdict(list)
+    for index, window in enumerate(review["working_windows"]):
+        start, end = (int(window[key][:2]) * 60 + int(window[key][3:]) for key in ("start", "end"))
+        if end <= start:
+            errors.append(f"{prefix}.working_windows[{index}]: end must be after start within the same day")
+        windows[window["weekday"]].append((start, end))
+    for weekday, slots in windows.items():
+        latest_end = -1
+        for start, end in sorted(slots):
+            if start < latest_end:
+                errors.append(f"{prefix}.working_windows: overlapping windows on weekday {weekday}")
+            latest_end = max(latest_end, end)
+    start_date, end_date = review["window_start"], review["window_end"]
+    if start_date is not None and end_date is not None:
+        start, end = date.fromisoformat(start_date), date.fromisoformat(end_date)
+        if end < start:
+            errors.append(f"{prefix}.window_end: review window ends before it starts")
+        elif available is not None and review["buffer_minutes"] is not None:
+            # An upper bound only: real busy intervals must still be checked by the host.
+            net_window_minutes = 0
+            for weekday, slots in windows.items():
+                offset = (weekday - start.isoweekday()) % 7
+                if offset > (end - start).days:
+                    continue
+                cursor = start + timedelta(days=offset)
+                while cursor <= end:
+                    midnight = datetime.combine(cursor, datetime.min.time(), tzinfo=zone)
+                    for left, right in slots:
+                        duration = right - left
+                        if zone is not None:
+                            duration = ((midnight + timedelta(minutes=right)).timestamp()
+                                        - (midnight + timedelta(minutes=left)).timestamp()) / 60
+                        net_window_minutes += max(0, duration - review["buffer_minutes"])
+                    if (end - cursor).days < 7:
+                        break
+                    cursor += timedelta(days=7)
+            allocated = review["already_allocated_minutes"] or 0
+            if available + allocated > net_window_minutes:
+                errors.append(f"{prefix}.available_minutes: available plus allocated time exceeds working windows after buffers")
+
+
+def check_calendar(data: dict, path: Path, errors: list[str]) -> None:
+    """Validate a proposal without claiming access to current task/calendar state."""
+    prefix = f"{label(path)}: $.data.operations"
+    seen = set()
+    slots = []
+    for index, operation in enumerate(data["operations"]):
+        location = f"{prefix}[{index}]"
+        task_id = operation["task_id"]
+        if task_id in seen:
+            errors.append(f"{location}.task_id: duplicate task operation; refresh its revision between changes")
+        seen.add(task_id)
+        if task_id in operation["patch"].get("depends_on", []):
+            errors.append(f"{location}.patch.depends_on: task cannot depend on itself")
+        schedule = operation["patch"].get("schedule")
+        if schedule is None:
+            continue
+        if operation["patch"].get("status") in {"completed", "cancelled"}:
+            errors.append(f"{location}.patch.schedule: completed/cancelled task cannot have an active schedule")
+        try:
+            zone = ZoneInfo(schedule["timezone"])
+        except (ZoneInfoNotFoundError, ValueError):
+            errors.append(f"{location}.patch.schedule.timezone: unknown IANA timezone or missing tzdata")
+            continue
+        before = len(errors)
+        instants = []
+        for field in ("start", "end"):
+            try:
+                instant = datetime.fromisoformat(schedule[field].replace("Z", "+00:00").replace("z", "+00:00"))
+            except ValueError:
+                errors.append(f"{location}.patch.schedule.{field}: unsupported calendar timestamp")
+                continue
+            if instant.utcoffset() is None:
+                errors.append(f"{location}.patch.schedule.{field}: an explicit UTC offset is required")
+                continue
+            local = instant.astimezone(zone)
+            if local.utcoffset() != instant.utcoffset() or local.replace(tzinfo=None) != instant.replace(tzinfo=None):
+                errors.append(f"{location}.patch.schedule.{field}: timestamp offset/local time does not match timezone")
+            instants.append(instant)
+        if len(instants) != 2:
+            continue
+        start, end = instants
+        if end <= start:
+            errors.append(f"{location}.patch.schedule.end: end must be after start")
+        if len(errors) == before:
+            slots.append((start, end, index))
+    # Actual availability and unchanged event slots are checked by the host at execution.
+    slots.sort(key=lambda slot: slot[0])
+    latest_end = None
+    latest_index = None
+    for start, end, index in slots:
+        if latest_end is not None and start < latest_end:
+            errors.append(f"{prefix}[{index}].patch.schedule: overlaps operation {latest_index}")
+        if latest_end is None or end > latest_end:
+            latest_end, latest_index = end, index
+
+
+def check_plan(data: dict, path: Path, errors: list[str], *, version: str = "1.0", status: str = "ready") -> None:
     prefix = f"{label(path)}: $.data"
     milestones = index_ids(data["milestones"], "milestones", path, errors)
     tasks = index_ids(data["tasks"], "tasks", path, errors)
@@ -271,9 +383,15 @@ def check_plan(data: dict, path: Path, errors: list[str]) -> None:
     predecessors = {task_id: set() for task_id in tasks}
     for index, task in enumerate(data["tasks"]):
         task_prefix = f"{prefix}.tasks[{index}]"
-        weekly_minutes[task["week"]] += task["estimated_minutes"]
+        if task["estimated_minutes"] is not None:
+            weekly_minutes[task["week"]] += task["estimated_minutes"]
+        horizon = data.get("horizon_weeks")
+        if horizon is not None and task["week"] > horizon:
+            errors.append(f"{task_prefix}.week: task is outside the planning horizon")
         if task["milestone_id"] not in milestones:
             errors.append(f"{task_prefix}.milestone_id: unknown milestone {task['milestone_id']!r}")
+        elif (target_week := milestones[task["milestone_id"]].get("target_week")) is not None and task["week"] > target_week:
+            errors.append(f"{task_prefix}.week: task is later than its milestone target week")
         for dependency in task["depends_on"]:
             if dependency not in tasks:
                 errors.append(f"{task_prefix}.depends_on: unknown task {dependency!r}")
@@ -301,21 +419,35 @@ def check_plan(data: dict, path: Path, errors: list[str]) -> None:
         errors.append(f"{prefix}.tasks: dependency cycle detected")
 
     weekly_hours = data["time_budget_hours_per_week"]
-    if weekly_hours is not None:
+    if data.get("planning_mode") == "broad" and data["tasks"] and (weekly_hours == 0 or data["time_budget_minutes_total"] == 0):
+        if status != "partial":
+            errors.append(f"{prefix}.tasks: a stated zero capacity requires a partial result; required tasks may remain unallocated")
+    if weekly_hours is not None and data.get("planning_mode") != "broad":
         budget = Decimal(str(weekly_hours)) * 60
         for week, minutes in sorted(weekly_minutes.items()):
             if minutes > budget:
-                errors.append(f"{prefix}.tasks: week {week} totals {minutes} minutes, exceeding weekly budget {budget} minutes")
+                if version == "1.0" or status != "partial":
+                    suffix = "; version 1.1 requires a partial result with the shortage" if version == "1.1" else ""
+                    errors.append(f"{prefix}.tasks: week {week} totals {minutes} minutes, exceeding weekly budget {budget} minutes{suffix}")
     total_budget = data["time_budget_minutes_total"]
     total_minutes = sum(weekly_minutes.values())
-    if total_budget is not None and total_minutes > total_budget:
-        errors.append(f"{prefix}.tasks: tasks total {total_minutes} minutes, exceeding total budget {total_budget} minutes")
+    if data.get("planning_mode") != "broad" and total_budget is not None and total_minutes > total_budget:
+        if version == "1.0" or status != "partial":
+            suffix = "; version 1.1 requires a partial result with the shortage" if version == "1.1" else ""
+            errors.append(f"{prefix}.tasks: tasks total {total_minutes} minutes, exceeding total budget {total_budget} minutes{suffix}")
 
     start, deadline = data["start_date"], data["deadline"]
     # Validated full dates use YYYY-MM-DD, so their lexical and chronological orders agree.
     if start is not None and deadline is not None and deadline < start:
         errors.append(f"{prefix}.deadline: deadline is before start_date")
+    if start is not None and deadline is not None:
+        for index, task in enumerate(data["tasks"]):
+            if (task["week"] - 1) * 7 > (date.fromisoformat(deadline) - date.fromisoformat(start)).days:
+                errors.append(f"{prefix}.tasks[{index}].week: task's planning week starts after the deadline")
     for index, milestone in enumerate(data["milestones"]):
+        target_week = milestone.get("target_week")
+        if target_week is not None and target_week > data["horizon_weeks"]:
+            errors.append(f"{prefix}.milestones[{index}].target_week: milestone is outside the planning horizon")
         target = milestone["target_date"]
         if target is None:
             continue
@@ -366,12 +498,20 @@ def validate_repo(root: Path) -> tuple[list[str], list[str]]:
         check_links(skill_dir, errors)
         schema = load_schema(skill_dir, errors)
         example_path = skill_dir / "examples" / "example-output.json"
-        example = read_json(example_path, errors)
-        if schema is not None and example is not MISSING:
-            check_instance(schema, example, example_path, errors)
+        example_paths = [example_path] + sorted(path for path in example_path.parent.glob("*.json") if path != example_path)
+        for candidate in example_paths:
+            example = read_json(candidate, errors)
+            if schema is not None and example is not MISSING:
+                check_instance(schema, example, candidate, errors)
         count = check_cases(root / "test-cases" / skill_dir.name / "cases.json", errors)
         if len(errors) == before:
             passes.append(f"PASS {skill_dir.name}: package, schema, example, {count} case definitions")
+    if (root / "components" / "hermes-orchestration").exists():
+        registry_check = runpy.run_path(str(Path(__file__).with_name("validate_orchestration.py")))
+        errors.extend(registry_check["validate_registry"](root))
+    daily_review = root / "components" / "daily-review"
+    if daily_review.exists():
+        check_cases(daily_review / "behaviour-cases.json", errors)
     return errors, passes
 
 
@@ -405,6 +545,8 @@ def main(argv: list[str] | None = None) -> int:
         return 1
     if not args.output:
         print(f"Validated {len(passes)} skill package(s). Case definitions were checked; no agent runs were executed.")
+        if (ROOT / "components" / "hermes-orchestration").exists():
+            print("PASS Hermes capability catalogue: skill coverage, voice contract and workflow routing")
     return 0
 
 
