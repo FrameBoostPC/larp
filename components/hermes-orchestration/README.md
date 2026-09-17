@@ -22,8 +22,9 @@ runtime. The public name **Content Creation** maps to the stable
 
 The five operational resources live under `<profile>/hermes-agent-skills/`.
 The installer adds their absolute locations to the policy block. Existing persona
-text outside the block is preserved. Model, speech, MCP configuration and
-credentials are not changed. Schema/API identifiers remain compatible.
+text outside the block is preserved. Model, speech and credentials are not changed.
+Optional `--n8n-url` merges one MCP connection into the existing profile config;
+without that flag MCP configuration is untouched. Schema/API identifiers remain compatible.
 User choices live separately in `user-settings.json`; installation and updates
 preserve that file. The settings helper needs IANA timezone data (`tzdata` on
 Windows). Read the [setup contract](setup-contract.md) for tool commands, source
@@ -34,9 +35,13 @@ the same helper.
 
 ## Install on the partner's computer
 
+For the current shared instance, start with the [partner setup guide](partner-setup.md).
+It includes a copyable agent prompt, connection setup, login and live acceptance.
+
 Use a checkout or the prepared setup bundle containing `scripts/`, `skills/` and
 this component directory. Python 3.10+ is required by the installer; it uses only
-the standard library. Hermes must already be installed separately.
+the standard library for source installation. Optional MCP configuration merging
+needs PyYAML from `requirements-dev.txt`. Hermes must already be installed separately.
 
 Select the **exact active profile directory**. Default Hermes normally uses
 `~/.hermes`; a named profile or `HERMES_HOME` can use a different directory.
@@ -75,11 +80,19 @@ different process changing the profile concurrently, so update while Hermes is i
 
 ## Connect the existing n8n instance
 
+The installer can perform the merge below: add
+`--n8n-url https://automatedai.app.n8n.cloud/mcp-server/http` to the preview,
+apply and check commands. It reuses a matching connection unchanged or creates
+`n8n_larp` with OAuth, a 360-second tool timeout and the four discovery/execution
+tools. It never logs in or changes remote workflows. Follow the
+[partner guide](partner-setup.md) to select local routes and join Daily Review's
+existing shared configuration without deploying another copy.
+
 Keep a working connection if one is already configured. Otherwise copy the exact
 instance-level MCP URL from n8n's MCP settings for `automatedai.app.n8n.cloud`.
 For this instance, the expected endpoint is
 `https://automatedai.app.n8n.cloud/mcp-server/http`; verify it in the owner's settings.
-Use the authenticated owner's access. In the active Hermes profile's `config.yaml`,
+Use an authenticated n8n account with access to the shared workflows. In the active Hermes profile's `config.yaml`,
 merge this named entry into the existing `mcp_servers` mapping, preserving others:
 
 ```yaml
@@ -98,25 +111,16 @@ For a named profile the documented form is
 The catalogue `hermes mcp install n8n` recipe may configure a different integration;
 it is not a substitute for verifying this exact connection.
 
-Four direct capabilities were verified published on 2026-09-16: project planning,
-calendar/tasks, outreach drafts and prospect research. Email review and priorities
-have saved routes but are unpublished. Publication enables background triggers
-and is not part of the installer. Gmail push is the current email prototype
-target, with its old poller, push webhook and daily watch-renewal trigger
-explicitly disabled pending verified Cloud/OAuth setup and live event acceptance.
-See the repository's [Gmail push setup](../../docs/gmail-push.md).
-The prospect helper remains internal;
-repurposing remains archived. Visibility in MCP alone does not prove callability.
+All six direct routes were verified published and executable on 2026-09-17:
+project planning, calendar/tasks, prospect research, outreach drafts, saved email
+reviews and Daily Review. The prospect worker remains internal; repurposing remains
+archived. Check live access from the partner's own authenticated connection.
 
-Daily Review now prepares source snapshots at a user-selected daily time and
-lets Hermes retrieve saved data and compose the review. Its
-[maintained component](../daily-review/README.md) covers email/spam, drafts,
-organisation receipts, work progress and the connected Notion schedule.
-The workflow does not generate or deliver the briefing. Its saved daily trigger
-is disabled pending deferred account/resource/time setup; the calendar's internal
-`daily_review_context` extension awaits publication. Reinstall the updated
-catalogue/contracts on the partner host when deployment is ready. The installer
-does not enable workflows or connect dashboard speech.
+Daily Review retrieves saved source snapshots for Hermes to compose the briefing.
+Its collection is paused and the daily trigger remains disabled, with no recurring
+time selected. Its published calendar read extension uses the existing Notion
+owner. The installer does not enable collection or change Gmail push processing.
+Use the [shared setup guide](partner-setup.md) to join its existing configuration.
 
 Other resources use the actual Hermes host's connected file, search, browser,
 media and account tools. Discover them per goal and authenticate when needed.
@@ -172,7 +176,8 @@ and text requests, useful partial results and recovery before claiming readiness
 `python scripts/validate.py` in the full repository also checks catalogue coverage
 and lifecycle/route consistency. `python scripts/validate_orchestration.py` runs
 that catalogue check alone. Neither executes prompts or connects providers.
-Installer checks are in `tests/test_install_hermes.py`; registry checks are in
+Installer checks are in `tests/test_install_hermes.py` and `tests/test_install_n8n.py`;
+shared-instance checks are in `tests/test_shared_n8n_setup.py`; registry checks are in
 `tests/test_orchestration.py`; setup checks are in `tests/test_hermes_settings.py`.
 Re-run the installer after an accepted source update.
 

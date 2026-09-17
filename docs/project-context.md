@@ -27,6 +27,12 @@ to the exact active Hermes profile while preserving existing persona/configurati
 The user requested a tested installer for the partner's computer, not a new local
 Hermes runtime. Native host/audio acceptance remains on that computer.
 
+The partner has chosen to use the existing shared n8n Cloud instance on their
+own computer. The [partner setup guide](../components/hermes-orchestration/partner-setup.md)
+provides a copyable prompt, optional MCP configuration installer and read-only
+acceptance. It joins the existing workflow owners and Daily Review configuration
+without importing workflows, rebinding accounts or selecting a recurring time.
+
 The public content feature is **Content Creation**, implemented by the stable
 `idea-to-content` skill. Across every feature, Hermes owns the goal and
 conversation; skills guide domain work; connected tools and bounded workflows
@@ -95,36 +101,23 @@ handoff. See the [integration guide](integration.md)
 for its contract and the [validation notes](validation.md) for results and publication
 status.
 
-The same direct agent contract now covers the published outreach and prospect
-research workflows, including saved status and cooperative research cancellation.
-Email-review and daily-priorities routes are prepared as saved drafts. The email
-poller, Gmail push webhook and watch-renewal trigger are disabled. Its
-[Gmail push replacement](gmail-push.md) is the current email prototype target and
-awaits verified Cloud/OAuth setup and a live incoming-event test. The user
-corrected the temporary Hotmail selection; no Microsoft workflow was implemented.
-Background email automation remains inactive.
-See [other n8n voice routes](integration.md#other-existing-n8n-voice-routes)
-for actions, retry behaviour and saved-queue limits. Workflow display names use
-shared group prefixes and role numbers; see the [name and dependency map](integration.md#workflow-names-and-relationships).
-Content continues through
-Idea to Content, and the standalone repurposing workflow remains archived.
+The direct agent contract covers six published workflow routes: project planning,
+calendar/tasks, prospect research, outreach drafts, saved email reviews and Daily
+Review. Their publication and execution access were checked through the owner's
+MCP connection on 2026-09-17. The prospect worker remains internal. Workflow names
+use shared group prefixes and role numbers. Content Creation uses the skill;
+standalone content repurposing and client onboarding remain retired.
 
-Daily Review was revised on 2026-09-17 to prepare source data at a user-selected
-time each day. Collection saves email/spam, existing drafts, confirmed organisation
-actions, Workbench progress and the connected Notion schedule. Hermes retrieves
-that saved snapshot and owns priorities, decisions, meeting preparation, possible
-commitments and final output. The workflow makes no new external model call,
-Gmail digest or scheduled user delivery. The
-[daily-review component](../components/daily-review/README.md) owns this contract.
-The revised draft is saved and tested; its daily trigger is disabled pending time
-and source selection through deferred onboarding. The installed
-[setup contract and settings helper](../components/hermes-orchestration/setup-contract.md)
-let users connect accounts and edit resources, routes and daily timing after
-integration. Setup is conversational; no separate onboarding screen is supplied.
-The workflow gates all reads until configured, skips unselected sources and
-isolates snapshots by configuration. The calendar's internal read extension remains a saved draft. This
-revision leaves the separate email push workflow untouched. Actual Hermes
-voice/dashboard integration remains on the partner's host.
+Daily Review prepares source snapshots and lets Hermes compose priorities,
+decisions, meeting preparation and follow-ups. Its published retrieval route can
+read saved snapshots while collection is paused. No recurring time is selected;
+the daily trigger is disabled. The calendar's internal read extension is published.
+The installed [setup contract and helper](../components/hermes-orchestration/setup-contract.md)
+support explicitly joining this existing configuration locally, as well as later
+account/resource/time setup through the separate deployment contract. Joining
+does not change the shared email push workflow or other owner bindings. Source
+freshness and coverage must remain visible. The partner must verify authenticated
+access and actual Hermes voice/dashboard operation on their own host.
 
 The portable Python [task/sync component](../components/planning-sync/README.md)
 remains an optional separate prototype. It implements persistent task state,

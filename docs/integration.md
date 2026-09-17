@@ -158,7 +158,7 @@ direct schedule and task requests.
 **Daily Review** now reads current Gmail sources, those saved records and
 Workbench progress, then calls the calendar owner's internal read action for
 today's Schedule & Tasks context. It does not generate fresh outreach or research.
-Both background automations remain paused.
+Daily Review collection remains paused; joining the shared instance does not change background triggers.
 
 The 2026-09-16 rename preserved stable workflow IDs, form addresses, action names
 and execution logic. Historical test notes and older canvas notes may use the
@@ -167,7 +167,7 @@ same IDs and current display names. Archived workflows are outside these groups.
 
 ## Other existing n8n voice routes
 
-Updated 2026-09-16. These routes use the same private **Agent request** trigger,
+Availability verified 2026-09-17. These routes use the same private **Agent request** trigger,
 authenticated MCP transport and `output` / `tool_result` response shape as the
 [planner/calendar contract](#direct-agent-requests-for-voice). The host supplies
 `request_id`, `session_id`, `revision`, `action` and resolved `arguments`. For these
@@ -178,8 +178,8 @@ session IDs and revisions follow the same rules. Users do not dictate IDs.
 | --- | --- |
 | [Prospecting & Outreach \| 03 - Draft Outreach & Follow-ups](https://automatedai.app.n8n.cloud/workflow/m9qGDkh7s29y4Bef) | Published. `draft_outreach` prepares a Gmail draft; `get_status` reads its saved receipt. |
 | [Prospecting & Outreach \| 01 - Find Prospects](https://automatedai.app.n8n.cloud/workflow/xy4pY5ahF6DxwH9P) | Published. `find_prospects`, `get_status`, `cancel_campaign`. Research continues through the published [02 - Research Prospect (Internal)](https://automatedai.app.n8n.cloud/workflow/iA9pVjGGi46EMVs5) helper. |
-| [Email \| Inbox Organiser & Reply Drafts](https://automatedai.app.n8n.cloud/workflow/PelmDAUWeW5f0gQU) | Saved draft, paused. `list_reviews` and `get_review` read recorded email reviews. |
-| [Daily Review \| Priorities Digest](https://automatedai.app.n8n.cloud/workflow/Ux9xifTok0pnJRMZ) | Saved preparation draft, paused pending time selection. `get_daily_review` and retained `get_priorities` retrieve the latest prepared source snapshot. |
+| [Email \| Inbox Organiser & Reply Drafts](https://automatedai.app.n8n.cloud/workflow/PelmDAUWeW5f0gQU) | Published. `list_reviews` and `get_review` read recorded email reviews. |
+| [Daily Review \| Priorities Digest](https://automatedai.app.n8n.cloud/workflow/Ux9xifTok0pnJRMZ) | Published retrieval; collection paused pending time selection. `get_daily_review` and retained `get_priorities` retrieve the latest prepared source snapshot. |
 
 Outreach needs `contact_name`, `contact_email`, `company`, `context`, `offer` and
 `contact_basis`. Reuse details already known to the conversation. `stage` defaults
@@ -226,7 +226,7 @@ decisions, meeting preparation, possible commitments and actual user output.
 Missing, stale and partial snapshots are explicit; retrieval never silently
 rescans. Schema 3.0 replaces the earlier formatted result and optional `since`
 argument. See the [daily-review component](../components/daily-review/README.md).
-Its daily trigger remains disabled in `setup_required`. The installed
+Its daily trigger remains disabled with collection `paused` and no recurring time chosen. The installed
 [setup contract](../components/hermes-orchestration/setup-contract.md) and
 `settings.py` helper support deferred conversational onboarding and later edits
 to connections, resources, routing, time and timezone. The partner exposes the
@@ -237,17 +237,14 @@ Unselected sources are skipped. Configuration changes invalidate old snapshots
 and selected references. A selected calendar needs its published internal
 `daily_review_context` extension and matching account/resource before activation.
 
-Paused routes can be validated with manual execution. The email workflow has a
-saved [Gmail push replacement](gmail-push.md), with its former poller, push webhook
-and daily watch-renewal trigger explicitly disabled.
-Gmail is the current prototype target. Cloud project/billing availability, OAuth
-and subscription setup must be verified before a real incoming-event test and
-activation. Keep the push and renewal triggers disabled until setup is ready;
-the old poller remains disabled. No Microsoft workflow was implemented during
-the temporary provider change.
-Daily Review has a separate every-day preparation schedule, disabled pending the
-user's time selection; neither is enabled by this update. Do not route new content
-work to archived Starter 06.
+All six direct routes are published. Authenticate and verify execution permissions
+from the partner's own profile using the [shared instance setup guide](../components/hermes-orchestration/partner-setup.md).
+The installer can merge MCP configuration; the local settings helper can reference
+the existing Daily Review configuration without changing remote accounts or time.
+Use its `get_setup` action for a connection check. Do not publish workflows or
+change email push processing as an incidental setup step. Daily Review collection
+remains paused. Archived Starter 06 remains retired.
+
 Actual microphone input, conversation state, interruption and speech playback
 remain part of the partner's Hermes/dashboard integration.
 

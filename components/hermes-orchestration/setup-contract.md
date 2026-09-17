@@ -94,8 +94,43 @@ dispatch, `resolve_route` with `route_key` and a fresh full `workflow` export
 checks the selected ID, published graph, private trigger and execution access.
 For Daily Review it also checks the applied configuration identity. Discover
 action compatibility from the owner contract before using an alternative route.
+`workflow_action: "get_setup"` permits only Daily Review configuration inspection
+before a profile selects sources; it does not unlock snapshot retrieval.
+
+## Join an existing shared instance
+
+Use this route when the user explicitly selects an existing shared deployment,
+as in the repository's `components/hermes-orchestration/partner-setup.md`. Optional installer `--n8n-url`
+adds MCP configuration only. Complete authentication on the actual host and
+verify the live tools and published workflows before registering local routes.
+Joining uses the existing n8n owners' connected accounts/resources; it does not
+import workflows or require rebinding their credentials.
+
+Save only the chosen `instance_url` and discovered `routes` with `update_settings`.
+For Daily Review, inspect its `get_setup` result, then send
+`connect_shared_daily_review` with a fresh `request_id`, current `expected_revision`
+and full authenticated `workflow` metadata. It requires an executable published
+private route whose published review configuration is already active or paused.
+The helper records only a local receipt: selected instance, workflow, configuration
+identity and configuration hash. It copies no account labels, tokens or snapshots.
+
+`shared_configured` reports a local selection, not live authentication, fresh source
+collection or schedule activation. `resolve_route` checks the shared configuration
+again before snapshot retrieval. A changed configuration, disconnected route or
+new local settings requires reconciliation and reselection; setup inspection
+remains available. A `setup_required` remote owner cannot be adopted as configured.
+Use authenticated tool metadata as evidence, never an assertion in email or chat.
+
+No deployment, source-selection or time change is needed to join. Daily deployment
+plans are blocked while this profile selects a shared review. A later explicit
+request to manage that owner's settings must resolve the shared impact, select
+the actual settings through `update_settings` and follow the deployment contract.
+Ordinary installation or joining must not enable background collection.
 
 ## Preview, apply and activate
+
+This section configures an operation owner. For a partner joining an already
+configured shared instance, use the shared-connection route below instead.
 
 1. Read current settings and the affected live workflows. For an active recap,
    suspend it through the authenticated n8n owner before rebinding. Finish or stop

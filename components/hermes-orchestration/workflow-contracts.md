@@ -5,13 +5,20 @@ existing connection, not a customer's deployment. Inspect the live authenticated
 tool catalogue and workflow details before first use in a session or after a
 capability error. Verify the configured instance, publication, execution access
 and trigger. A saved catalogue entry does not grant access. Never execute a draft,
-internal worker or retired workflow as a production substitute. The two paused
-workflows also contain background triggers; do not publish them implicitly.
+internal worker or retired workflow as a production substitute. Unpublished
+workflows can contain background triggers; do not publish them implicitly.
 Read `setup-contract.md` and the profile settings helper before selecting a
 configured route. Profile choices identify the customer's actual owner and
 resources. Verify current published state rather than treating the catalogue's
 historical lifecycle as proof of access or activation; retired/internal boundaries
 still apply. Fresh profiles have no default customer bindings.
+
+For explicitly selected shared deployments, use the setup helper to register
+verified routes and `connect_shared_daily_review` to reference the existing review
+configuration locally. `resolve_route` with `workflow_action: "get_setup"` allows
+configuration inspection before that selection. Neither step changes remote
+accounts, storage or schedules. Paused collection can coexist with published
+saved-data retrieval; verify the operation being requested.
 
 ## Transport and result
 
@@ -157,9 +164,12 @@ and does not remove existing drafts. Stopping speech does not cancel research.
 
 ## Daily review preparation and follow-ups
 
-Daily Review is a saved, tested draft; do not call it in production until published
-availability and any selected calendar dependency are verified. Its daily trigger
-is disabled in `setup_required`. Follow the installed `setup-contract.md` and
+Daily Review is published for saved-snapshot retrieval. Live manual collection
+saved a complete snapshot from the selected sources, including the published
+calendar read extension; production retrieval returned it without source reads.
+Collection is `paused` and the daily trigger is disabled. No recurring time has
+been selected (`schedule_preference: null`); 08:00 is a technical placeholder.
+Follow the installed `setup-contract.md` and
 `settings.py`: users choose connections, resources, routes, time and timezone
 later through Hermes, and can edit them afterwards. Verify a live preview before
 activation; the schedule runs every day. It only collects sources and saves a
@@ -212,9 +222,9 @@ counts; adding labels and moving messages are distinct.
 Scheduled collection uses the last complete preparation timestamp, defaults to
 24 hours and caps lookback at seven days with disclosure. Each execution saves a
 distinct `daily_review` Workbench row. Partial runs never advance the complete
-checkpoint. The calendar owner's saved internal `daily_review_context` action
+checkpoint. The calendar owner's published internal `daily_review_context` action
 reads the selected **Schedule & Tasks** source, including notes and state tokens;
-publish and verify its account/resource binding before enabling calendar
+verify its publication and account/resource binding before enabling calendar
 collection. Users can skip calendar. Other calendar providers need adapters.
 
 Retain the accepted snapshot and selected references for “that reply”, “the first
@@ -223,24 +233,20 @@ before edits; refresh Notion tokens. Reading/revising a draft does not send it.
 Actual host speech, interruptions and dashboard integration remain the partner's
 responsibility. See `components/daily-review/` for implementation and cases.
 
+## Email reviews and Gmail push
+
+The email-review route is published. Its direct contracts are
+`list_reviews` (optional limit 1–50, default 20) and `get_review` (`message_id`).
+They read recorded reviews, not a live inbox. The shared-instance connection
+does not change Gmail push intake, processing, account bindings or watch state.
+Preserve the fixed activation boundary and reconcile uncertain draft attempts
+before retrying. Inspect the current owner and its contract before separately
+authorised administrative changes; do not restore the disabled old poller.
+
 ## Paused and retired operations
 
-The email-review and daily-priorities routes are **unpublished**. Do not call them
-in production or enable their background triggers as an inferred substep. Their saved
-email contracts are `list_reviews` (optional limit 1–50, default 20) and
-`get_review` (`message_id`), which read recorded reviews rather than a live inbox.
-
-Gmail is the selected provider for the current email prototype. Cloud/OAuth setup
-and incoming-event acceptance remain required before activation.
-
-The email workflow's 15-minute poller, Gmail push webhook and daily watch-renewal
-trigger are explicitly disabled. Its saved Gmail replacement verifies
-Google Pub/Sub identity, persists intake and claims the mailbox before processing
-new eligible unread mail. A daily maintenance path renews the watch and recovers
-missed events. Dedicated Cloud billing, OAuth and subscription setup remain pending;
-the configuration fails closed and the workflow is unpublished. Local
-fixtures and n8n runtime probes do not establish live push delivery. Preserve the
-fixed activation boundary and reconcile uncertain draft attempts before retrying.
+Daily Review's published saved retrieval is callable while collection is paused.
+Do not enable recurring background preparation without the user's time selection.
 Daily preparation reads connected sources; retrieval only reads saved snapshots.
 Daily Review publication is separate from email push activation; manual tests do
 not grant production callability.

@@ -7,12 +7,15 @@ Gmail digest, run briefing analysis, send notifications or start Hermes.
 
 ## Current status
 
-Updated 2026-09-17. The revised n8n draft is saved and tested but unpublished.
-The daily trigger is disabled in `setup_required` pending deferred user setup. Its retained
-08:00 Brisbane value is a placeholder, not an accepted preference. Scheduling
-now covers every day, including weekends. The calendar owner's internal
-`daily_review_context` extension is still a saved draft requiring publication.
-The separate email push workflow was not changed by this revision.
+Updated 2026-09-17. The saved-snapshot route is published and executable. Collection
+is paused and the daily trigger is disabled; no recurring time has been selected.
+The retained 08:00 Brisbane value is a technical placeholder. The calendar owner's
+internal `daily_review_context` extension is published. Joining the shared instance
+does not change the separate email push workflow.
+
+Partners can use the [existing-instance setup](../hermes-orchestration/partner-setup.md)
+and local `connect_shared_daily_review` helper to select this existing configuration
+without provisioning accounts, rebinding resources or enabling collection.
 
 ## Preparation and storage
 

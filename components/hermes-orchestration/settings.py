@@ -49,7 +49,8 @@ def fresh():
             "daily_review": {"time": None, "timezone": None, "email_connection": None,
                              "calendar_resource": None, "workbench_resource": None,
                              "email_review_resource": None, "organisation_resource": None,
-            "storage_resource": None}, "preview": None, "deployment": None, "previous_routes": {}, "last_command": None}
+            "storage_resource": None}, "preview": None, "deployment": None, "previous_routes": {}, "last_command": None,
+            "shared_daily_review": None}
 
 
 def validate(state, catalogue):
@@ -97,6 +98,12 @@ def validate(state, catalogue):
             require(resource is not None, f"Selected {key} is missing")
             require(resource["kind"] == ("notion_data_source" if key == "calendar_resource" else "n8n_table"), f"Unsupported {key} adapter")
     require(daily["email_connection"] or not (daily["email_review_resource"] or daily["organisation_resource"]), "Email review/organisation tables require a selected mailbox")
+    shared = state.get("shared_daily_review")
+    if shared is not None:
+        fields(shared, ("local_configuration_id", "instance_url", "workflow_id", "configuration_id", "configuration_sha256"), "shared review receipt")
+        require(all(isinstance(shared.get(k), str) and shared[k] for k in
+                    ("local_configuration_id", "instance_url", "workflow_id", "configuration_id"))
+                and re.fullmatch(r"[a-f0-9]{64}", shared.get("configuration_sha256", "")), "Invalid shared review receipt")
     return state
 
 
@@ -114,6 +121,8 @@ def status(state):
     deployed = state.get("deployment") or {}
     current = deployed.get("configuration_id") == state["configuration_id"]
     stage = "setup_required" if missing else "active" if current and deployed.get("active") else "paused" if current and deployed.get("mode") == "paused" else "ready_to_preview"
+    if shared_review_matches(state):
+        stage, missing = "shared_configured", []
     return {"status": stage, "missing": missing, "settings": state, "remote_changed": False}
 
 
@@ -138,6 +147,7 @@ def update(state, changes, catalogue):
         result["previous_routes"] = deepcopy(state["routes"])
         result["configuration_id"] = uuid.uuid4().hex
         result["preview"] = None
+        result["shared_daily_review"] = None
     return result
 
 
@@ -159,7 +169,24 @@ def check_workflow(state, route_key, export):
     return w
 
 
-def resolve_route(state, catalogue, key, export):
+def shared_review_matches(state):
+    shared = state.get("shared_daily_review") or {}
+    return bool(shared and shared.get("local_configuration_id") == state["configuration_id"]
+                and shared.get("instance_url") == state["instance_url"]
+                and shared.get("workflow_id") == state["routes"].get("priorities", {}).get("workflow_id"))
+
+
+def review_config(graph):
+    config = json.loads(workflow_node(graph, "Review configuration")["parameters"]["jsonOutput"])["review_config"]
+    require(isinstance(config, dict) and name(config.get("configuration_id")), "Need a configured published review owner")
+    return config
+
+
+def config_digest(config):
+    return hashlib.sha256(json.dumps(config, sort_keys=True, separators=(",", ":")).encode()).hexdigest()
+
+
+def resolve_route(state, catalogue, key, export, workflow_action=None):
     require(state["instance_url"], "Select the authenticated n8n connection first")
     owner = next((w for w in catalogue["workflows"] if w["key"] == key), None)
     require(owner and owner["exposure"] == "direct", "Internal/retired routes cannot be dispatched directly")
@@ -172,10 +199,36 @@ def resolve_route(state, catalogue, key, export):
     require(trigger["type"].endswith(".chatTrigger") and not trigger.get("disabled") and trigger.get("parameters", {}).get("public") is False, "Expected a private enabled agent trigger")
     for terminal in route["terminal_nodes"]:
         workflow_node(graph, terminal)
+    actions, configuration_id = owner["actions"], state["configuration_id"]
+    if workflow_action is not None:
+        require(workflow_action in actions, "Action is not registered for this route")
     if key == "priorities":
-        config = json.loads(workflow_node(graph, "Review configuration")["parameters"]["jsonOutput"])["review_config"]
-        require(config.get("configuration_id") == state["configuration_id"] and config.get("mode") in ("active", "paused"), "Apply and verify the selected recap settings before retrieval")
-    return {"status": "ready", "instance_url": state["instance_url"], **route, "actions": owner["actions"], "configuration_id": state["configuration_id"]}
+        config = review_config(graph)
+        configuration_id = config["configuration_id"]
+        if workflow_action == "get_setup":
+            # Setup inspection reads configuration only, even before source selection.
+            actions = ["get_setup"]
+        elif shared_review_matches(state):
+            shared = state["shared_daily_review"]
+            require(config.get("mode") in ("active", "paused")
+                    and shared["configuration_id"] == configuration_id
+                    and shared["configuration_sha256"] == config_digest(config),
+                    "Shared review configuration changed; inspect and select the shared owner again")
+        else:
+            require(configuration_id == state["configuration_id"] and config.get("mode") in ("active", "paused"), "Apply and verify the selected recap settings before retrieval")
+    return {"status": "ready", "instance_url": state["instance_url"], **route, "actions": actions, "configuration_id": configuration_id}
+
+
+def connect_shared_review(state, catalogue, export):
+    """Record an explicitly selected existing owner locally, without rebinding it."""
+    resolve_route(state, catalogue, "priorities", export, "get_setup")
+    w = unwrap(export)
+    graph = w if (w.get("activeVersion") or {}).get("sameAsDraft") else w.get("activeVersion")
+    config = review_config(graph)
+    require(config.get("mode") in ("active", "paused"), "Shared review must already be configured and active or paused")
+    return {"local_configuration_id": state["configuration_id"], "instance_url": state["instance_url"],
+            "workflow_id": w["id"], "configuration_id": config["configuration_id"],
+            "configuration_sha256": config_digest(config)}
 
 
 def runtime_configuration(state, mode):
@@ -261,6 +314,7 @@ def binding_plan(state, catalogue, route_key, export, edits):
 
 
 def daily_plan(state, export, mode="preview", calendar_export=None):
+    require(not shared_review_matches(state), "This profile uses a shared review; explicitly select your own settings before preparing a deployment")
     require(mode in ("setup_required", "preview", "active", "paused"), "Unknown deployment mode")
     if mode in ("preview", "active"):
         require(not status(state)["missing"], "Finish the selected setup fields before preparing a deployment")
@@ -413,13 +467,13 @@ def dispatch(home, catalogue, command):
         if action == "get_settings":
             return status(state)
         if action == "resolve_route":
-            return resolve_route(state, catalogue, command["route_key"], command["workflow"])
+            return resolve_route(state, catalogue, command["route_key"], command["workflow"], command.get("workflow_action"))
         if action == "plan_bindings":
             return binding_plan(state, catalogue, command["route_key"], command["workflow"], command["edits"])
         if action == "plan_calendar_binding":
             return calendar_binding_plan(state, command["workflow"])
         return daily_plan(state, command["workflow"], command.get("mode", "preview"), command.get("calendar_workflow"))
-    require(action in ("update_settings", "record_preview", "record_deployment"), "Unknown settings action")
+    require(action in ("update_settings", "record_preview", "record_deployment", "connect_shared_daily_review"), "Unknown settings action")
     require(identifier(command.get("request_id")), "A stable request ID is required")
     fingerprint = hashlib.sha256(json.dumps(command, sort_keys=True, separators=(",", ":")).encode()).hexdigest()
     with locked(path):
@@ -431,6 +485,8 @@ def dispatch(home, catalogue, command):
         require(type(command.get("expected_revision")) is int and command["expected_revision"] == state["revision"], "Settings changed; reload before editing")
         if action == "update_settings":
             state = update(state, command["changes"], catalogue)
+        elif action == "connect_shared_daily_review":
+            state["shared_daily_review"] = connect_shared_review(state, catalogue, command["workflow"])
         elif action == "record_preview":
             state["preview"] = accept_preview(state, command["evidence"])
         else:

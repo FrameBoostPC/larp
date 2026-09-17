@@ -29,6 +29,9 @@ and a workflow containing a bounded model step does not become a second agent.
   recap snapshots. Discover actual login and resource tools; the Markdown guide
   itself does not connect an account. Preserve Gmail push intake when rebinding
   its owner, including its watch and mailbox state.
+  When the user chooses an existing shared instance, register its verified routes
+  and join its existing Daily Review configuration using the setup contract;
+  do not provision new accounts or redeploy the shared owner just to connect.
 - Content Creation uses `idea-to-content`. Infer original creation or adaptation
   from source and outcome; requested platforms override defaults. A broader goal
   can require research, profile copy, visual assets and account/profile actions.
@@ -51,8 +54,9 @@ and a workflow containing a bounded model step does not become a second agent.
   Stopping audio, cancelling pending work and undoing a write are distinct.
 - Verify external outcomes from tool results. A prepared draft, proposed plan,
   started workflow and completed action are different states. Report remaining
-  blockers honestly and resume from progress. Respect paused/retired routes and
-  never bypass login, verification or platform permissions to finish an action.
+  blockers honestly and resume from progress. Respect paused collection and retired
+  routes; published saved-data reads may remain callable while collection is paused. Never
+  bypass login, verification or platform permissions to finish an action.
 
 The catalogue guides selection rather than limiting Hermes to enumerated tasks.
 Apply the same responsibilities to newly connected tools and future skills.

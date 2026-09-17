@@ -17,7 +17,9 @@ The board is private and requires separate access. Pushing changes to the reposi
 also requires collaborator access.
 
 Read [project context](docs/project-context.md), then follow the
-[Hermes installation and integration guide](components/hermes-orchestration/README.md).
+[partner setup for our existing n8n instance](components/hermes-orchestration/partner-setup.md).
+It includes a copyable Hermes prompt, optional MCP connection installer, sign-in
+steps and a read-only workflow check. Your partner runs it on their computer.
 The repository contains source, contracts and setup guides; access to the running
 n8n instance and the partner's Hermes/dashboard host is configured separately.
 
@@ -117,10 +119,11 @@ expertise, while actual connected tools and workflows perform operations. The
 policy applies across current and future features. Content Creation keeps the
 `idea-to-content` identifier for existing integrations.
 
-The installer previews by default, preserves existing personality/configuration,
+The installer previews by default, preserves existing personality and unrelated configuration,
 and protects locally edited files. It includes the capability catalogue and
-verified direct-workflow contracts; connecting the partner's authenticated tools
-and speech stack is still required. The existing published n8n routes already fit
+verified direct-workflow contracts. Optional `--n8n-url` adds the existing instance's
+MCP connection configuration; the partner completes authentication and host speech
+acceptance. The existing published n8n routes already fit
 this architecture. Paused workflows and the archived repurposing workflow retain
 their states. See [project working instructions](AGENTS.md) for future changes.
 

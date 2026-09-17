@@ -1,8 +1,9 @@
 #!/usr/bin/env python3
 """Install the shared Hermes policy and skills into an explicitly selected profile.
 
-Dry-run by default. This does not install Hermes, configure connections, or read
-credentials. Existing content is replaced only when its last installed hash agrees.
+Dry-run by default. Optional --n8n-url adds an OAuth MCP connection; login is a
+separate user step. This does not install Hermes or copy credentials.
+Existing content is replaced only when its last installed hash agrees.
 """
 
 from __future__ import annotations
@@ -13,9 +14,11 @@ import hashlib
 import json
 import os
 from pathlib import Path, PurePosixPath
+import re
 import stat
 import sys
 import tempfile
+from urllib.parse import urlsplit
 import uuid
 
 
@@ -28,6 +31,125 @@ END = b"<!-- hermes-agent-skills:end -->"
 RESOURCES = ("instructions.md", "capabilities.json", "workflow-contracts.md", "setup-contract.md", "settings.py")
 RETIRED_SKILLS = frozenset({"research-brief"})
 UNCHECKED = object()
+N8N_TOOLS = ("search_workflows", "get_workflow_details", "execute_workflow", "get_workflow_execution")
+
+
+def n8n_config(raw: bytes, endpoint: str, server_name: str) -> tuple[bytes, str]:
+    """Add one MCP entry without rewriting unrelated YAML or exposing its values.
+
+    Existing matching connections (including their auth and tool filters) are
+    preserved. Unusual YAML is rejected for explicit reconciliation, never guessed.
+    """
+    try:
+        parsed = urlsplit(endpoint)
+        parsed.port  # Validate a supplied port without echoing the URL on failure.
+    except ValueError as exc:
+        raise InstallError("Use a valid HTTPS instance MCP URL without credentials") from exc
+    if (parsed.scheme != "https" or not parsed.hostname or parsed.username is not None
+            or parsed.password is not None or parsed.query or parsed.fragment
+            or parsed.path.rstrip("/") != "/mcp-server/http"
+            or re.search(r"[\s\x00-\x1f]", endpoint)):
+        raise InstallError("Use the HTTPS instance MCP URL ending in /mcp-server/http, without credentials or query parameters")
+    if not re.fullmatch(r"[a-z][a-z0-9_-]{0,63}", server_name):
+        raise InstallError("MCP server name must use lowercase letters, digits, underscores or hyphens")
+    endpoint = endpoint.rstrip("/")
+    try:
+        import yaml
+    except ImportError as exc:
+        raise InstallError("Optional MCP setup requires PyYAML; install requirements-dev.txt with this Python interpreter") from exc
+
+    class UniqueLoader(yaml.SafeLoader):
+        pass
+
+    def mapping(loader, node, deep=False):
+        result = {}
+        for key_node, value_node in node.value:
+            key = loader.construct_object(key_node, deep=deep)
+            if not isinstance(key, str) or key in result:
+                raise InstallError("config.yaml has duplicate or non-string mapping keys; reconcile it first")
+            result[key] = loader.construct_object(value_node, deep=deep)
+        return result
+
+    UniqueLoader.add_constructor(yaml.resolver.BaseResolver.DEFAULT_MAPPING_TAG, mapping)
+
+    def load(text):
+        try:
+            return yaml.load(text, Loader=UniqueLoader), yaml.compose(text, Loader=UniqueLoader)
+        except (yaml.YAMLError, RecursionError, ValueError) as exc:
+            # YAML error strings can contain entire lines, including secrets.
+            raise InstallError("Cannot safely merge config.yaml; check its YAML structure locally") from exc
+
+    try:
+        text = raw.decode("utf-8-sig")
+    except UnicodeError as exc:
+        raise InstallError("config.yaml must use UTF-8") from exc
+    config, root = load(text)
+    if not isinstance(config, dict) or not isinstance(root, yaml.MappingNode) or root.flow_style:
+        raise InstallError("config.yaml must contain one block-style settings mapping")
+    servers = config.get("mcp_servers") or {}
+    if not isinstance(servers, dict):
+        raise InstallError("mcp_servers must be a mapping; reconcile config.yaml first")
+    matches = [(name, value) for name, value in servers.items()
+               if isinstance(value, dict) and isinstance(value.get("url"), str)
+               and value["url"].rstrip("/") == endpoint]
+    if len(matches) > 1:
+        if server_name not in dict(matches):
+            raise InstallError("Several connections use this endpoint; select one with --n8n-server-name")
+        matches = [(server_name, servers[server_name])]
+    if matches:
+        name, existing = matches[0]
+        if existing.get("enabled") is False:
+            raise InstallError("The matching MCP connection is disabled; explicitly enable it in Hermes before setup")
+        if existing.get("command"):
+            raise InstallError("The matching MCP connection mixes transports; reconcile it in Hermes")
+        return raw, name
+    if server_name in servers:
+        raise InstallError("That MCP server name is already used; choose a different --n8n-server-name")
+
+    entry = {"url": endpoint, "auth": "oauth", "timeout": 360,
+             "tools": {"include": list(N8N_TOOLS)}}
+    eol = "\r\n" if "\r\n" in text else "\n"
+    mcp_node = next((v for k, v in root.value if k.value == "mcp_servers"), None)
+    generated = yaml.safe_dump({server_name: entry}, sort_keys=False).rstrip("\n")
+    if mcp_node is None:
+        addition = "mcp_servers:" + eol + eol.join("  " + line for line in generated.splitlines()) + eol
+        merged = text + ("" if text.endswith(("\n", "\r")) else eol) + addition
+    elif isinstance(mcp_node, yaml.MappingNode) and mcp_node.value and not mcp_node.flow_style:
+        first_key = mcp_node.value[0][0]
+        start = text.rfind("\n", 0, first_key.start_mark.index) + 1
+        indent = " " * first_key.start_mark.column
+        addition = eol.join(indent + line for line in generated.splitlines()) + eol
+        merged = text[:start] + addition + text[start:]
+    elif not servers and (isinstance(mcp_node, yaml.MappingNode)
+                          or isinstance(mcp_node, yaml.ScalarNode) and mcp_node.tag.endswith(":null")):
+        addition = eol + eol.join("  " + line for line in generated.splitlines())
+        merged = text[:mcp_node.start_mark.index] + addition + text[mcp_node.end_mark.index:]
+    else:
+        raise InstallError("mcp_servers uses unsupported YAML layout; merge the documented entry locally")
+    expected = dict(config)
+    expected["mcp_servers"] = {**servers, server_name: entry}
+    after, _ = load(merged)
+    if after != expected:
+        raise InstallError("MCP insertion would change unrelated settings; merge the documented entry locally")
+    bom = b"\xef\xbb\xbf" if raw.startswith(b"\xef\xbb\xbf") else b""
+    return bom + merged.encode("utf-8"), server_name
+
+
+def add_n8n_to_plan(plan: dict, endpoint: str, server_name: str) -> str:
+    """Use the installer's lock, backups and concurrent-edit checks for config too.
+
+    config.yaml is deliberately not added to installer ownership. Future installs
+    without --n8n-url leave it alone, including the user's later connection edits.
+    """
+    path = target_path(plan["home"], "config.yaml")
+    original = read_optional(path)
+    if original is None:
+        raise InstallError("MCP setup requires the existing active Hermes profile's config.yaml; complete Hermes setup and check --hermes-home")
+    updated, selected = n8n_config(original, endpoint, server_name)
+    plan["before"]["config.yaml"] = original
+    if updated != original:
+        plan["changes"]["config.yaml"] = updated
+    return selected
 
 
 class InstallError(ValueError):
@@ -299,9 +421,12 @@ def main(argv: list[str] | None = None) -> int:
     mode = parser.add_mutually_exclusive_group()
     mode.add_argument("--apply", action="store_true", help="Apply the preflighted installation")
     mode.add_argument("--check", action="store_true", help="Exit 1 if installation differs; never write")
+    parser.add_argument("--n8n-url", help="Optional existing instance MCP URL; adds OAuth configuration, never logs in or changes workflows")
+    parser.add_argument("--n8n-server-name", default="n8n_larp", help="Name for a new MCP entry, or an explicit choice among matching entries")
     args = parser.parse_args(argv)
     try:
         plan = build_plan(ROOT, args.hermes_home)
+        n8n_server = add_n8n_to_plan(plan, args.n8n_url, args.n8n_server_name) if args.n8n_url else None
         print(f"Profile: {plan['home']}")
         print(f"Source: {plan['skill_count']} skills and {len(RESOURCES)} orchestration resources")
         if plan["conflicts"]:
@@ -321,7 +446,14 @@ def main(argv: list[str] | None = None) -> int:
             print("Check: changes required." if args.check else "Dry run only. Add --apply to install.")
         else:
             print("Installation is current.")
-        print("Connections, model, credentials and speech configuration were not changed.")
+        if n8n_server:
+            print(f"Selected MCP connection: {n8n_server}")
+            print("MCP configuration checked locally; authentication and workflow access are NOT verified.")
+            print(f"Next: run 'hermes mcp login {n8n_server}' in the same active profile (use -p PROFILE for a named profile).")
+            print("Then follow components/hermes-orchestration/partner-setup.md for live discovery, route selection and acceptance.")
+            print("Model, credentials, speech and remote n8n workflows were not changed.")
+        else:
+            print("Connections, model, credentials and speech configuration were not changed.")
         return 1 if args.check and plan["changes"] else 0
     except (InstallError, OSError) as exc:
         print(f"Installation stopped: {exc}", file=sys.stderr)
