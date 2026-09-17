@@ -4,14 +4,17 @@ Shared skill packages for the Hermes-based agent and dashboard we are building a
 
 ## Partner quick start
 
-The shared source is in the private [larp repository](https://github.com/FrameBoostPC/larp).
-Track work on the linked [larp project board](https://github.com/users/FrameBoostPC/projects/2).
-After accepting a repository invitation, clone it using your own GitHub sign-in:
+The shared source is in the public [larp repository](https://github.com/FrameBoostPC/larp).
+Anyone can read or clone it without a repository invitation or GitHub sign-in:
 
 ```sh
 git clone https://github.com/FrameBoostPC/larp.git
 cd larp
 ```
+
+Track work on the linked [larp project board](https://github.com/users/FrameBoostPC/projects/2).
+The board is private and requires separate access. Pushing changes to the repository
+also requires collaborator access.
 
 Read [project context](docs/project-context.md), then follow the
 [Hermes installation and integration guide](components/hermes-orchestration/README.md).
@@ -124,9 +127,7 @@ their states. See [project working instructions](AGENTS.md) for future changes.
 ## Install into a development Hermes agent
 
 The shared installer above is the recommended complete setup. To install only
-individual skills, authenticate access to this private GitHub repository using
-your environment's supported GitHub authentication. Do not put tokens in commands,
-this repository, or customer packages. Register and install the skills:
+individual skills, register this public repository and install the packages:
 
 ```sh
 hermes skills tap add FrameBoostPC/larp
