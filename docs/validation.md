@@ -1128,3 +1128,22 @@ paused pending the user's chosen time. No mail was sent.
 Actual Hermes installation, voice/text acceptance, and missing host contact or
 live-mail tools remain partner-host work. Local source and n8n checks do not
 establish that deployment.
+
+### Planner deadline correction
+
+The broad-plan defect above was a formatter fallback, not generated model
+output: after validating deadlines, `Format result` replaced null broad task
+deadlines with target-week ends. Removed just that fallback and retained the
+exact formatter source in `components/planning-sync/n8n-format-result.js`.
+Five regression tests execute that source: null deadlines, explicit deadlines
+in both modes, horizon-only dates, existing/replayed deadlines, invalid dates
+and completed-task protection. All passed; node configuration validation passed.
+
+Cloud execution 975 returned two broad tasks with null deadlines and separate
+week targets, with `sync_started: false`. Published planner version
+`574f8703-fc97-4462-9587-5a1c394ab820`; only `Format result` changed, with all
+connections and settings retained. The existing canvas grouping warning is
+unrelated to execution. Historical saved proposals/Notion tasks were not edited.
+Existing save paths were not exercised with real writes during this review.
+
+The user explicitly chose to keep Daily Review preparation paused.

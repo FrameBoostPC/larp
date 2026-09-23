@@ -1,5 +1,14 @@
 [
   {
+    "id": "broad-targets-without-deadlines",
+    "prompt": "Create a broad four-week desk organisation plan starting 2026-09-28. No task deadline has been agreed. Save the accepted tasks without booking sessions.",
+    "expected_behavior": [
+      "Weekly targets remain proposals; the start date, target-week ends and horizon end are not used as task deadlines.",
+      "New task due_date values remain null; estimates remain null and no time blocks are created.",
+      "Preserve any actual existing task deadline and report saves only from provider receipts."
+    ]
+  },
+  {
     "id": "voice-reuses-n8n-owned-plan",
     "prompt": "Host context: the connected n8n planning route owns generation and has returned this accepted broad plan for my four-week workshop launch: week 1 outline, week 2 prepare examples, week 3 rehearse, week 4 publish details. Current task state confirms the outline is complete and preparing examples is unblocked. No calendar changes were requested. Completed voice request: What should I do next?",
     "expected_behavior": [

@@ -41,7 +41,7 @@
       "skill_id": "project-planner", "workflow_key": "project-planner",
       "tool_roles": ["project context", "current task state", "calendar availability", "source email or document for captured projects"],
       "intent_examples": ["Plan the next month for this project.", "Save those tasks to Notion.", "Add detailed time planning using my usual work hours."],
-      "notes": "For the configured Notion setup, the workflow owns plan generation and saving; do not produce another model plan first. The skill supplies portable planning expertise when a workflow is not needed. Broad planning is the default; planning alone creates no bookings."
+        "notes": "For the configured Notion setup, the workflow owns plan generation and saving; do not produce another model plan first. The skill supplies portable planning expertise when a workflow is not needed. Broad planning is the default; planning alone creates no bookings, and target weeks never become implicit deadlines."
     },
     {
       "id": "calendar-and-tasks", "label": "Calendar and Tasks",

@@ -18,6 +18,14 @@ See the [integration guide](../../docs/integration.md) for the workflow
 contract and [validation notes](../../docs/validation.md) for results and publication
 status.
 
+`n8n-format-result.js` is the deployed planner's `Format result` Code-node
+source (JavaScript, run once for each item). It is separate from the Python
+prototype below. Broad target weeks remain proposals: without an explicit
+deadline, `due_date` stays null. The existing deadline validation, task identity,
+replay and detailed time recommendations are preserved. Test the exact source
+with `node components/planning-sync/n8n-format-result.test.mjs`. This narrow
+node snapshot does not constitute a complete workflow export or installer.
+
 The Python component below is an optional separate implementation. The existing
 database uses `Name`, `When`, `Type`, `Status` (select), `Blocks time`, `Notes`,
 `Reference` and `Colour`. Its single `When` property holds either a task deadline

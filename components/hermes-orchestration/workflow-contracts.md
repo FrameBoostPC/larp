@@ -97,6 +97,11 @@ the default is `mode: "Draft only"`. Supported optional fields also include
 brief within 16,000 characters. `work_days` accepts full or abbreviated day names
 as an array or comma-separated string.
 
+Target weeks and the horizon end are planning proposals, not implicit deadlines.
+For broad and detailed plans, `due_date` stays null unless explicitly supplied
+in the brief or retained from the same existing/saved task. Saving a broad plan
+must not convert every weekly target into a dated Notion commitment.
+
 The workflow generates, validates and persists its own proposal. Do not first
 generate a competing plan with the portable skill and then ask the workflow to
 plan again. Preserve the project reference across reviews, and the request

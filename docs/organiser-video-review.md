@@ -58,3 +58,9 @@ send mail, create tasks, alter watch settings or change stored reviews.
 Deployment status and test results are recorded in `docs/validation.md`. Keep the
 existing workflow version history for rollback; revert just the return node if
 later unrelated changes have been made. No historical email records need migration.
+
+Integration checks also found and corrected an existing planner formatter
+fallback that converted broad weekly targets into implicit deadlines. The
+published correction preserves null deadlines while retaining target weeks,
+explicit deadline validation, existing task identities and detailed scheduling.
+Daily Review remains paused at the user's explicit choice.
