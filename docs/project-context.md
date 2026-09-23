@@ -1,6 +1,6 @@
 # Project context
 
-Updated: 2026-09-17.
+Updated: 2026-09-24.
 
 ## Current business model
 
@@ -100,6 +100,20 @@ published on 2026-09-16. Actual Hermes voice integration remains the partner's
 handoff. See the [integration guide](integration.md)
 for its contract and the [validation notes](validation.md) for results and publication
 status.
+
+The published planner keeps target weeks separate from actual deadlines: a broad
+plan does not silently date every task. The published calendar owner can find
+tasks by title words, project, exact status or page ID and can return up to two
+same-day alternatives when a checked slot is busy. These reads do not create or
+move a booking. The existing owner retains current-state checks for edits.
+
+The published inbox owner classifies new Gmail messages, applies category labels,
+saves reviews and prepares reply drafts. Hermes can read those saved reviews by
+category, status, exact sender address or subject phrase and open the original
+Gmail thread. This is recorded-review search, not live mailbox search. Cross-owner
+email-to-task and booking-to-draft handoffs are defined for Hermes; they still
+require acceptance on the partner's host. No contact lookup, attendee invitation
+or new priority/assignee field was added from the Skool examples.
 
 The direct agent contract covers six published workflow routes: project planning,
 calendar/tasks, prospect research, outreach drafts, saved email reviews and Daily
