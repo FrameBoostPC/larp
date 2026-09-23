@@ -43,15 +43,41 @@ is performed. Routine newsletters, notifications, promotions, social updates and
 receipts are summarised without reply drafts. FILE means labelled, not archived,
 marked read or deleted. No sending, forwarding or extra recurring job is added.
 
-`list_reviews` accepts optional category, status and limit (1–50, default 20).
+`list_reviews` accepts optional category, status, sender, subject_contains and
+limit (1–50, default 20). Sender is an exact email address, normalised to lowercase;
+subject_contains is a case-insensitive literal substring (maximum 200 characters).
 Status is REVIEW, FILE or DRAFT_CREATED. Storage filters apply before the limit,
 newest first. `get_review` retains message identity lookup. Results include
 category, thread identity and counts of returned items only, with
 `counts_scope: returned_items`, `may_have_more` and `live_inbox_checked: false`.
 These are saved summaries, not live inbox totals.
 
+Results include `gmail_url` for opening the original thread in the configured
+Gmail account (null when no valid Gmail identity is available). Receipt attachments
+stay with the original email. This neither searches attachment contents nor confirms
+that an attachment exists, and opening the link does not refresh the saved review.
+
 Examples: “Summarise saved social updates”, “Show sales drafts”, “What emails
 need my review?” Actual speech/dashboard acceptance belongs to the partner's host.
+
+## Skool template follow-up
+
+Inspected the [Skool n8n lessons](https://www.skool.com/automatable-free/classroom/6ca29126?md=427b8f8cfce148df88830192ff00a413)
+and the downloadable [Outlook email template](https://www.skool.com/automatable-free/classroom/6ca29126?md=85b36844a97b48bdb9018af8474975f1)
+on 2026-09-23. The Gmail entry refers to the same video above. The Outlook
+template's receipt filing is useful in principle, but its separate storage,
+hardcoded forwarding destination and automatic contact creation do not fit this
+Gmail owner. No Google Drive credential was connected. Keep receipts in Gmail;
+make the saved reviews searchable by sender/subject and link to the originals.
+This adds three parameter updates, with no extra nodes, tables or recurring jobs.
+
+`retrieval.mjs` is the subsequent one-time migration from the inspected
+category/organiser baseline. `retrievalOperations(baseline)` preserves the three
+existing storage filters and adds sender and escaped literal-subject filters,
+all before the limit. It reads the verified mailbox from the owner's configuration
+to generate account-bound links. Do not commit generated operations or exports:
+they contain account configuration. Run `node components/email-triage/retrieval.test.mjs`
+and the email-review transport tests when changing it.
 
 ## Reproduce and test
 
@@ -105,3 +131,15 @@ preserve those response additions in any subsequent email work.
 
 Rollback: restore the preserved prior version, validate and publish it. Added
 labels can remain; existing reviews and drafts need not be deleted.
+
+Saved-search version published: `e3c17e62-44aa-49f7-bd5f-dbb8838c5c0c`.
+Twenty policy, retrieval and response tests passed, as did the repository validator.
+Cloud execution 979 verified combined sender/subject/category filters and limit
+against a known saved message; 985 verified literal percent matching without
+broadening to every row; 986 verified get_review and the original-email link.
+Production execution 987 returned the expected filtered message and link.
+Execution 983 also rejected a malformed envelope before reading storage.
+Only three existing read-route nodes changed; the other 60 nodes, connections
+and workflow settings match the preserved baseline. The published version was
+verified equal to the draft. Browser navigation of a Gmail link and actual
+Hermes speech remain host acceptance tasks; no email was sent in these tests.

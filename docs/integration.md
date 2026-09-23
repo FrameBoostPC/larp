@@ -214,7 +214,11 @@ An in-flight action can finish; completed drafts remain available. Only a worker
 confirmed stop returns `cancelled`. Stopping speech does not cancel the campaign.
 
 For email review, `list_reviews` accepts optional `limit` (1–50, default 20),
-`category` and `status`; filters apply before the limit. Category labels and
+`category`, `status`, exact email `sender` and literal `subject_contains`;
+filters apply before the limit. Subject matching is case-insensitive and does
+not search bodies or attachments. Results include an account-bound `gmail_url`
+for the original message/thread when a valid Gmail identity is available.
+Category labels and
 saved-summary retrieval were added on 2026-09-23; see the
 [email triage component](../components/email-triage/README.md). Counts cover only
 returned records, not inbox totals.

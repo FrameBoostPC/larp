@@ -241,13 +241,27 @@ responsibility. See `components/daily-review/` for implementation and cases.
 ## Email reviews and Gmail push
 
 The email-review route is published. Its direct contracts are
-`list_reviews` (optional limit 1–50, default 20; optional `category` and `status`)
+`list_reviews` (optional limit 1–50, default 20; optional `category`, `status`,
+`sender` and `subject_contains`)
 and `get_review` (`message_id`). Category values are ACTION, MEETING, FINANCE,
 NEWSLETTER, NOTIFICATION, PERSONAL, OTHER, PROMOTION, SOCIAL, SALES, RECRUITMENT
 and RECEIPT. Status values are REVIEW, FILE and DRAFT_CREATED. Filters apply in
 storage before the limit. Results include category, thread identity and counts
 with `counts_scope: returned_items`; these are not inbox totals. Preserve
 `live_inbox_checked: false` and `may_have_more` when summarising.
+`sender` is an exact email address from known correspondence, normalised to
+lowercase; never guess an address from a person's or business's name.
+`subject_contains` is a case-insensitive literal substring, trimmed and limited
+to 200 characters. Percent, underscore and backslash are literal text, not query
+operators. Combine these filters with category/status before the result limit.
+For example, “Find saved receipts from bills@example.com with invoice in the
+subject” uses category RECEIPT, sender bills@example.com and subject_contains
+invoice. This does not search message bodies or attachments.
+Show the returned `gmail_url` on screen when the user wants the original email;
+it targets the configured Gmail account and is null without a valid Gmail ID.
+Do not speak the raw URL. A link is not evidence of an attachment or a refreshed
+message. No saved matches does not establish that Gmail has no matching mail;
+a live search requires an actually connected email tool.
 “Show sales drafts” maps to category SALES and status DRAFT_CREATED;
 “Summarise saved social updates” uses category SOCIAL. The
 [email component](../email-triage/README.md) records policy and acceptance.

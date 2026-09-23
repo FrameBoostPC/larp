@@ -38,12 +38,20 @@ export function parseReviewRequest(input) {
   if (!obj(v) || Object.keys(v).some(k => !['request_id','session_id','revision','action','arguments'].includes(k)) || typeof v.request_id !== 'string' || !/^[a-z0-9][a-z0-9_.-]{1,59}$/.test(v.request_id) || typeof v.session_id !== 'string' || !/^[a-zA-Z0-9][a-zA-Z0-9_.:-]{0,119}$/.test(v.session_id) || !Number.isSafeInteger(v.revision) || v.revision < 0 || !obj(v.arguments) || JSON.stringify(v).length > 28000) return fail('invalid_request','The agent request needs valid tracking information and arguments.');
   if (!['list_reviews','get_review'].includes(v.action)) return fail('invalid_request','That action is not supported by this workflow.');
   const a = {...v.arguments};
-  const allowed = v.action === 'list_reviews' ? ['limit','category','status'] : ['message_id','limit'];
+  const allowed = v.action === 'list_reviews' ? ['limit','category','status','sender','subject_contains'] : ['message_id','limit'];
   if (Object.keys(a).some(k => !allowed.includes(k))) return fail('invalid_request','The request contains unsupported arguments.');
   if (v.action === 'get_review' && (typeof a.message_id !== 'string' || !a.message_id.trim() || a.message_id.length > 160)) return fail('needs_input','Which email review do you mean?');
   if (a.limit !== undefined && (!Number.isInteger(a.limit) || a.limit < 1 || a.limit > 50)) return fail('invalid_request','Review limit must be between one and fifty.');
   if (a.category !== undefined && !CATEGORIES.includes(a.category)) return fail('invalid_request','Choose a supported email category.');
   if (a.status !== undefined && !['REVIEW','FILE','DRAFT_CREATED'].includes(a.status)) return fail('invalid_request','Choose REVIEW, FILE or DRAFT_CREATED.');
+  if (a.sender !== undefined) {
+    if (typeof a.sender !== 'string' || a.sender.length > 254 || !/^[^<>\s,@]+@[^<>\s,@]+\.[^<>\s,@]+$/.test(a.sender.trim())) return fail('invalid_request','Use the sender’s email address from known correspondence.');
+    a.sender = a.sender.trim().toLowerCase();
+  }
+  if (a.subject_contains !== undefined) {
+    if (typeof a.subject_contains !== 'string' || !a.subject_contains.trim() || a.subject_contains.length > 200 || /[\u0000-\u001f]/.test(a.subject_contains)) return fail('invalid_request','Use a short subject phrase.');
+    a.subject_contains = a.subject_contains.trim();
+  }
   return {origin:'agent', agent:v, operation:v.action, raw:a};
 }
 

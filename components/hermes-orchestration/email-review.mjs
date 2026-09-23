@@ -1,5 +1,5 @@
 /** Saved review transport; provider refresh and mutations belong to their owners. */
-export function buildEmailReviewResult(query, inputRows, retrievedAt) {
+export function buildEmailReviewResult(query, inputRows, retrievedAt, mailbox = '') {
   if (query.agent_result) return query.agent_result;
   const meta = query.agent || {};
   const envelope = (status, spoken, data = null) => ({
@@ -29,11 +29,14 @@ export function buildEmailReviewResult(query, inputRows, retrievedAt) {
     const age = validTime ? Math.floor((now - processed) / 1000) : null;
     const thread = identifier(row.thread_id);
     const draft = identifier(row.draft_id);
+    const gmailId = [thread, row.message_id].find(value => typeof value === 'string' && /^[a-f0-9]{10,32}$/i.test(value));
+    const mailboxValid = typeof mailbox === 'string' && /^[^<>\s,@]+@[^<>\s,@]+\.[^<>\s,@]+$/.test(mailbox);
     return {
       message_id: row.message_id, thread_id: thread, category: row.category || 'OTHER',
       subject: row.subject, sender: row.sender, priority: row.priority,
       status: row.status, summary: row.summary, reason: row.reason,
       draft_id: draft, processed_at: row.processed_at,
+      gmail_url: gmailId && mailboxValid ? `https://mail.google.com/mail/?authuser=${encodeURIComponent(mailbox)}#all/${gmailId}` : null,
       time_clash: row.time_clash === true, tags: row.time_clash === true ? ['clash'] : [],
       source_refs: { provider: 'gmail', message_id: row.message_id, thread_id: thread, draft_id: draft },
       review_age_seconds: age,
@@ -60,11 +63,12 @@ export function buildEmailReviewResult(query, inputRows, retrievedAt) {
     retrieved_at: retrievedAt, limit,
     may_have_more: query.operation === 'list_reviews' && count === limit,
     references_scope: 'configured_email_owner',
-    filters: { category: query.raw?.category ?? null, status: query.raw?.status ?? null },
+    filters: { category: query.raw?.category ?? null, status: query.raw?.status ?? null,
+      sender: query.raw?.sender ?? null, subject_contains: query.raw?.subject_contains ?? null },
     counts, counts_scope: 'returned_items',
   });
 }
 
-export function emailReviewNodeCode() {
-  return buildEmailReviewResult.toString() + '\nreturn [{json:buildEmailReviewResult($("Parse agent request").first().json,$input.all().map(item=>item.json),$now.toISO())}];';
+export function emailReviewNodeCode(mailbox = '') {
+  return buildEmailReviewResult.toString() + '\nreturn [{json:buildEmailReviewResult($("Parse agent request").first().json,$input.all().map(item=>item.json),$now.toISO(),' + JSON.stringify(mailbox) + ')}];';
 }

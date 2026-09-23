@@ -24,7 +24,7 @@ test('preserves concurrently added category filters and counts without prototype
   const filtered = { ...query, raw: { category: 'MEETING', status: 'DRAFT_CREATED' } };
   const result = buildEmailReviewResult(filtered, [row], now);
   assert.match(result.output, /saved meeting email review/);
-  assert.deepEqual(result.tool_result.data.filters, filtered.raw);
+  assert.deepEqual(result.tool_result.data.filters, {...filtered.raw, sender:null, subject_contains:null});
   const weird = buildEmailReviewResult(query, [{ ...row, category: '__proto__' }], now);
   assert.equal(weird.tool_result.data.counts.categories.__proto__, 1);
   assert.equal(Object.getPrototypeOf(weird.tool_result.data.counts.categories), Object.prototype);
