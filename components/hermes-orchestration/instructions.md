@@ -48,6 +48,12 @@ and a workflow containing a bounded model step does not become a second agent.
   Serialise related writes, refresh current state before edits, and reconcile an
   uncertain outcome before retrying. Exact retries keep their original identity
   and arguments; a correction is a new accepted command.
+- For organiser requests spanning email, tasks and calendar, follow the organiser
+  sequences in the workflow contract. Keep the selected message/thread, task and
+  booking references together. Resolve named people from known correspondence or
+  actual contact search before asking for addresses; never guess a recipient.
+  Refresh the source before acting. Complete each authorised step and retain its
+  receipt so a failed later step does not duplicate an earlier task or booking.
 - Return brief spoken outcomes or the essential question, with full results
   available separately. Speak only current accepted results; suppress stale
   responses after a correction. Readback uses accepted text without regeneration.

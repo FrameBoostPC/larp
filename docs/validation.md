@@ -1098,3 +1098,33 @@ selection of the daily activation time remain outstanding.
 Private pre-change exports and generated artifacts are in ignored
 `local/daily-review-before-prepare/` and `local/daily-review-prepare-build/`.
 Connected source contents are not copied into maintained files.
+
+## Organiser video integration — 23 September 2026
+
+Kept the existing owners and added cross-organiser contracts and nine host
+acceptance cases. The video comparison and transcript limitations are recorded
+in `docs/organiser-video-review.md`.
+
+Published only the email owner's `Return email reviews` node on top of the
+concurrent category/filter changes: version
+`f9025a8e-7ad2-401e-a619-609ebfc1b93e`. It preserves message/thread/draft identity,
+category/status filters and counts, and adds historical age and source/calendar
+refresh requirements. All other nodes, connections and settings were unchanged.
+Cloud test 965 exposed count serialization that offline tests missed; the
+corrected version passed execution 970 and was verified against the publication.
+
+Checks: seven Node transport tests, repository validation, 19 orchestration
+tests, and 26 installer tests (25 passed; one platform skip). Nine organiser
+case definitions were checked structurally, not run on the partner host.
+Read-only calendar executions 967 and 971 returned current tasks and available
+slots. Planner draft executions 968 and 973 exercised broad and detailed modes;
+no Notion tasks or bookings were saved. Detailed mode respected the requested
+hours/windows. Broad mode exposed an existing target-week-to-deadline conversion
+and requires a separate correction before calling that path accepted.
+Daily Review retrieval 972 correctly marked the saved September 21 snapshot
+stale/partial and performed no live collection. Its preparation schedule remains
+paused pending the user's chosen time. No mail was sent.
+
+Actual Hermes installation, voice/text acceptance, and missing host contact or
+live-mail tools remain partner-host work. Local source and n8n checks do not
+establish that deployment.

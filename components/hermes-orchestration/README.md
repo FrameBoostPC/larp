@@ -181,6 +181,14 @@ shared-instance checks are in `tests/test_shared_n8n_setup.py`; registry checks 
 `tests/test_orchestration.py`; setup checks are in `tests/test_hermes_settings.py`.
 Re-run the installer after an accepted source update.
 
+Organiser sequences are in the installed `workflow-contracts.md`: capture a
+source email as a task/project, resolve contacts from real tools, and coordinate
+booking with reply drafting while retaining separate receipts. Run
+`node components/hermes-orchestration/email-review.test.mjs` for the saved-review
+transport checks. `email-review.mjs` generates the existing n8n return-node code;
+it is deployment source, not another host tool. Exercise `organiser-cases.json`
+on the partner's actual Hermes host before claiming conversational acceptance.
+
 ## Verified upstream configuration
 
 The profile policy and tool setup follow official
