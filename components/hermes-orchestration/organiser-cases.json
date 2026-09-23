@@ -1,5 +1,15 @@
 [
   {
+    "id": "find-task-before-edit",
+    "prompt": "Mark my brochure task complete. The calendar owner is connected and no task is currently selected; list_tasks with query brochure returns two open records from different projects.",
+    "expected_behavior": ["Search by name through the calendar owner before asking for an ID.", "Ask which matching task, retain its page ID/state token and complete only that task. Never choose the first match or create a replacement."]
+  },
+  {
+    "id": "busy-slot-alternatives",
+    "prompt": "Check whether I have an hour free tomorrow at 10. Known work window is 09:00–16:00 Brisbane with 15-minute buffers. check_slot returns UNAVAILABLE and two same-day alternatives.",
+    "expected_behavior": ["Pass the known preferences, offer the actual returned alternatives and say nothing has been booked.", "Preserve duration and refresh availability before a later authorised booking. If alternatives are empty, explain the search limits rather than inventing a time."]
+  },
+  {
     "id": "email-to-undated-task",
     "prompt": "Make that email into a task. Selected saved review has message/thread IDs; the current thread requests a brochure revision but gives no deadline. The calendar owner and email reader are available.",
     "expected_behavior": ["Read the current thread, preserve mailbox-scoped source references and create one undated Task through the calendar owner.", "Retain the returned page/receipt for follow-ups. Do not book a focus session, send an email or generate a competing project plan."]

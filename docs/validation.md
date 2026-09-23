@@ -1147,3 +1147,36 @@ unrelated to execution. Historical saved proposals/Notion tasks were not edited.
 Existing save paths were not exercised with real writes during this review.
 
 The user explicitly chose to keep Daily Review preparation paused.
+
+## Practical organiser additions — 23 September 2026
+
+After inspecting the actual Skool blueprint files, added two small features to
+the existing Calendar & Task Manager: title-word/project/status/page task filters
+and up to two same-day alternatives on an unavailable `check_slot`. Suggestions
+retain duration, working-window/weekend preferences and buffers, stay future-only
+and never book anything. Multiple task matches retain distinct IDs/state tokens.
+No new database, schema, credentials, models, nodes or scheduled work was added.
+Contact search, invitations and priority/assignee schema additions are deferred.
+
+Published calendar version `39ec9ce4-d31f-475e-97c3-064c72cff209`. Exactly four
+Code-node parameters changed; graph, settings, other nodes and write routes were
+preserved. The published source was compared with the tested files. Existing
+canvas grouping warnings are unrelated; the pre-existing date-method warning
+refers to legitimate JavaScript Date calls, not a Luxon `.toISOString()` call.
+
+Ten exact-source Node tests passed: filters, ambiguity, literal query validation,
+completed-task lookup, two buffered alternatives, no available alternatives,
+past/weekend/multi-day limits, existing conflict/state guards and spoken results.
+The node configuration checks, full repository validator and 19 orchestration
+tests passed. Two new organiser acceptance cases are definitions for the partner
+host, not completed voice tests.
+
+Cloud read-only executions 977 and 978 verified combined filters/no matches and
+the default open-task list. Execution 980 verified one exact current task by
+query/status/page ID. Execution 981 verified an unavailable partly elapsed window
+with no remaining same-day alternatives. Execution 982 verified the existing
+slot finder still returns two future half-hour suggestions. All reported
+`mutated: false`; no tasks, bookings or emails were created for testing.
+Busy-record alternative cases were tested using synthetic records locally.
+Partner Hermes installation/voice acceptance remains pending; Daily Review stays
+paused as explicitly requested.

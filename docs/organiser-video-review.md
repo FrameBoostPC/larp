@@ -1,5 +1,12 @@
 # Organiser integration review — 23 September 2026
 
+Follow-up: the signed-in Skool classroom subsequently provided the actual
+manager, calendar, task and receptionist scheduler JSON files. See the
+[direct blueprint comparison](skool-planner-comparison.md) for the stronger
+source evidence, concrete defects and recommended additions. The earlier video
+transcript limitation below remains accurate, but no longer limits the workflow
+comparison to descriptions and summaries.
+
 ## Decision
 
 Keep the current email, planner and calendar owners; integrate the useful

@@ -47,8 +47,8 @@
       "id": "calendar-and-tasks", "label": "Calendar and Tasks",
       "skill_id": "calendar-planner", "workflow_key": "calendar",
       "tool_roles": ["current tasks", "current schedule", "working preferences", "source email references", "contact lookup when actually connected"],
-      "intent_examples": ["Move that task to tomorrow at ten.", "Mark it complete.", "Find a free hour next week.", "Turn that email into a task.", "Book that meeting and draft a reply."],
-      "notes": "Use existing Schedule & Tasks pages through the scheduler, with current state tokens for edits. Resolve target, date, timezone and scope from context. Reading availability does not book it; an explicit scheduling goal authorises the resolved scheduling action."
+        "intent_examples": ["Move that task to tomorrow at ten.", "Find my brochure task.", "Show completed tasks for this project.", "Mark it complete.", "Find a free hour next week.", "If that slot is busy, show me alternatives.", "Turn that email into a task.", "Book that meeting and draft a reply."],
+        "notes": "Use existing Schedule & Tasks pages through the scheduler, with current state tokens for edits. Task reads support name/project/status/page filters; ambiguous matches require selection. Unavailable slot checks offer up to two same-day alternatives within the search preferences. Resolve target, date, timezone and scope from context. Reading availability does not book it; an explicit scheduling goal authorises the resolved scheduling action."
     },
     {
       "id": "outreach-drafts", "label": "Outreach Drafts",
