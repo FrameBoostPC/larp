@@ -213,7 +213,11 @@ Workers check before a website fetch and again before reserving/creating a draft
 An in-flight action can finish; completed drafts remain available. Only a worker's
 confirmed stop returns `cancelled`. Stopping speech does not cancel the campaign.
 
-For email review, `list_reviews` accepts optional `limit` (1–50, default 20);
+For email review, `list_reviews` accepts optional `limit` (1–50, default 20),
+`category` and `status`; filters apply before the limit. Category labels and
+saved-summary retrieval were added on 2026-09-23; see the
+[email triage component](../components/email-triage/README.md). Counts cover only
+returned records, not inbox totals.
 `get_review` needs `message_id`. Results explicitly identify saved review data and
 `live_inbox_checked: false`. They do not poll Gmail or generate more drafts.
 Daily Review has separate preparation and retrieval paths. At a user-selected

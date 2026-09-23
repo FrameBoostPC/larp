@@ -41,6 +41,11 @@ All new and updated workflows must prioritise voice: direct agent actions, share
 conversation state, optional inputs and concise spoken results. See the
 [voice-first workflow standard](docs/integration.md#voice-first-workflow-standard).
 
+The [email triage component](components/email-triage/README.md) adds Gmail category
+labels and category/status filters for saved summaries. Hermes can answer
+“Show sales drafts” or “Summarise saved social updates” through the existing owner.
+Reply drafts, push intake and calendar checks remain in that owner.
+
 Hermes should infer the necessary steps from the user's goal, including creating
 and adapting content for named platforms without a repurposing command. Broader
 goals can combine writing, connected tools and existing workflows. Complete

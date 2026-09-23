@@ -236,7 +236,16 @@ responsibility. See `components/daily-review/` for implementation and cases.
 ## Email reviews and Gmail push
 
 The email-review route is published. Its direct contracts are
-`list_reviews` (optional limit 1–50, default 20) and `get_review` (`message_id`).
+`list_reviews` (optional limit 1–50, default 20; optional `category` and `status`)
+and `get_review` (`message_id`). Category values are ACTION, MEETING, FINANCE,
+NEWSLETTER, NOTIFICATION, PERSONAL, OTHER, PROMOTION, SOCIAL, SALES, RECRUITMENT
+and RECEIPT. Status values are REVIEW, FILE and DRAFT_CREATED. Filters apply in
+storage before the limit. Results include category, thread identity and counts
+with `counts_scope: returned_items`; these are not inbox totals. Preserve
+`live_inbox_checked: false` and `may_have_more` when summarising.
+“Show sales drafts” maps to category SALES and status DRAFT_CREATED;
+“Summarise saved social updates” uses category SOCIAL. The
+[email component](../email-triage/README.md) records policy and acceptance.
 They read recorded reviews, not a live inbox. The shared-instance connection
 does not change Gmail push intake, processing, account bindings or watch state.
 Preserve the fixed activation boundary and reconcile uncertain draft attempts
