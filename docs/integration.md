@@ -178,7 +178,7 @@ session IDs and revisions follow the same rules. Users do not dictate IDs.
 | --- | --- |
 | [Prospecting & Outreach \| 03 - Draft Outreach & Follow-ups](https://automatedai.app.n8n.cloud/workflow/m9qGDkh7s29y4Bef) | Published. `draft_outreach` prepares a Gmail draft; `get_status` reads its saved receipt. |
 | [Prospecting & Outreach \| 01 - Find Prospects](https://automatedai.app.n8n.cloud/workflow/xy4pY5ahF6DxwH9P) | Published. `find_prospects`, `get_status`, `cancel_campaign`. Research continues through the published [02 - Research Prospect (Internal)](https://automatedai.app.n8n.cloud/workflow/iA9pVjGGi46EMVs5) helper. |
-| [Email \| Inbox Organiser & Reply Drafts](https://automatedai.app.n8n.cloud/workflow/PelmDAUWeW5f0gQU) | Published. `list_reviews` and `get_review` read recorded email reviews. |
+| [Email \| Inbox Organiser & Reply Drafts](https://automatedai.app.n8n.cloud/workflow/PelmDAUWeW5f0gQU) | Published. `list_reviews` filters recorded reviews by category, status, sender or subject; `get_review` reads one by message ID. Results can link to the original Gmail thread. |
 | [Daily Review \| Priorities Digest](https://automatedai.app.n8n.cloud/workflow/Ux9xifTok0pnJRMZ) | Published retrieval; collection paused pending time selection. `get_daily_review` and retained `get_priorities` retrieve the latest prepared source snapshot. |
 
 Outreach needs `contact_name`, `contact_email`, `company`, `context`, `offer` and
@@ -213,7 +213,15 @@ Workers check before a website fetch and again before reserving/creating a draft
 An in-flight action can finish; completed drafts remain available. Only a worker's
 confirmed stop returns `cancelled`. Stopping speech does not cancel the campaign.
 
-For email review, `list_reviews` accepts optional `limit` (1–50, default 20);
+For email review, `list_reviews` accepts optional `limit` (1–50, default 20),
+`category`, `status`, exact email `sender` and literal `subject_contains`;
+filters apply before the limit. Subject matching is case-insensitive and does
+not search bodies or attachments. Results include an account-bound `gmail_url`
+for the original message/thread when a valid Gmail identity is available.
+Category labels and
+saved-summary retrieval were added on 2026-09-23; see the
+[email triage component](../components/email-triage/README.md). Counts cover only
+returned records, not inbox totals.
 `get_review` needs `message_id`. Results explicitly identify saved review data and
 `live_inbox_checked: false`. They do not poll Gmail or generate more drafts.
 Daily Review has separate preparation and retrieval paths. At a user-selected
@@ -366,8 +374,8 @@ fields; revision-based speech suppression remains the host's responsibility.
 | Planner `plan_project` | Required goal, stable project reference and resolved ISO start date. Backlog can be omitted; the planner derives tasks from the goal. Defaults to Broad timeline, four weeks and Draft only. Other choices use the planning inputs above. |
 | Detailed planning | Supply `planning_style: "Detailed time planning"` and known `work_days`, `work_start`, `work_end`. If windows are unknown, one clarification asks when the user usually works. `hours_available` remains optional; explicit zero remains zero. |
 | Calendar `project_context` | Required `project_reference`. Refresh current project tasks, stable page IDs, state tokens and calendar commitments. |
-| Calendar `list_tasks`, `list_schedule` | Read current tasks or a schedule window. For the latter, supply `window_start`/`window_end` with timezone offsets, or inclusive `from_date`/`to_date`. |
-| Calendar `find_slots`, `check_slot` | Supply a resolved window; optional duration, daily start/end, weekends, buffer and maximum slots use the scheduler's existing validation. Reads never reserve time. |
+| Calendar `list_tasks`, `list_schedule` | Read current tasks or a schedule window. `list_tasks` accepts optional literal title-word `query`, exact `project_reference`, `status` and `page_id` filters; default status remains open tasks. Multiple matches keep separate IDs and state tokens. For `list_schedule`, supply `window_start`/`window_end` with timezone offsets, or inclusive `from_date`/`to_date`. |
+| Calendar `find_slots`, `check_slot` | Supply a resolved window; optional duration, daily start/end, weekends, buffer and maximum slots use the scheduler's existing validation. An unavailable `check_slot` may return up to two same-day alternatives with the requested duration and buffers. Reads never reserve time; refresh availability before booking a selected option. |
 | Calendar `create` | Supply title and kind; Task may be undated. A timed item needs explicit `start` and `end` timestamps. A date-only Task uses `due_date`. A stable reference derives from the request ID. |
 | Calendar `update`, `complete`, `archive` | Supply the selected `page_id` and its exact latest `state_token` as `expected_state`. Update sends only intentional changed fields. Resolve an ambiguous “it” in Hermes before calling. |
 

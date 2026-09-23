@@ -5,7 +5,16 @@ integration draft. Hermes remains responsible for conversation and voice; Google
 Pub/Sub is the proposed source of incoming-mail events. This is not a separate
 user-facing skill.
 
-## Current state — 2026-09-17
+## Current observation — 2026-09-23
+
+The live owner had a published 63-node graph, enabled push and daily-renewal
+triggers, and message processing enabled. This supersedes the paused September
+17 setup state below. Its account and activation boundary were preserved while
+adding [category labels and saved-summary filters](../components/email-triage/README.md).
+This does not independently re-verify Cloud IAM, billing or token expiry. Do not
+repeat historical setup or rebind the account based on the old notes.
+
+## Historical setup state — 2026-09-17
 
 Gmail is the selected provider for the email prototype. The user corrected the
 temporary Hotmail selection and requested continuation of Gmail setup, using the

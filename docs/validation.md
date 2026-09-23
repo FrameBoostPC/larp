@@ -1098,3 +1098,85 @@ selection of the daily activation time remain outstanding.
 Private pre-change exports and generated artifacts are in ignored
 `local/daily-review-before-prepare/` and `local/daily-review-prepare-build/`.
 Connected source contents are not copied into maintained files.
+
+## Organiser video integration — 23 September 2026
+
+Kept the existing owners and added cross-organiser contracts and nine host
+acceptance cases. The video comparison and transcript limitations are recorded
+in `docs/organiser-video-review.md`.
+
+Published only the email owner's `Return email reviews` node on top of the
+concurrent category/filter changes: version
+`f9025a8e-7ad2-401e-a619-609ebfc1b93e`. It preserves message/thread/draft identity,
+category/status filters and counts, and adds historical age and source/calendar
+refresh requirements. All other nodes, connections and settings were unchanged.
+Cloud test 965 exposed count serialization that offline tests missed; the
+corrected version passed execution 970 and was verified against the publication.
+
+Checks: seven Node transport tests, repository validation, 19 orchestration
+tests, and 26 installer tests (25 passed; one platform skip). Nine organiser
+case definitions were checked structurally, not run on the partner host.
+Read-only calendar executions 967 and 971 returned current tasks and available
+slots. Planner draft executions 968 and 973 exercised broad and detailed modes;
+no Notion tasks or bookings were saved. Detailed mode respected the requested
+hours/windows. Broad mode exposed an existing target-week-to-deadline conversion
+and requires a separate correction before calling that path accepted.
+Daily Review retrieval 972 correctly marked the saved September 21 snapshot
+stale/partial and performed no live collection. Its preparation schedule remains
+paused pending the user's chosen time. No mail was sent.
+
+Actual Hermes installation, voice/text acceptance, and missing host contact or
+live-mail tools remain partner-host work. Local source and n8n checks do not
+establish that deployment.
+
+### Planner deadline correction
+
+The broad-plan defect above was a formatter fallback, not generated model
+output: after validating deadlines, `Format result` replaced null broad task
+deadlines with target-week ends. Removed just that fallback and retained the
+exact formatter source in `components/planning-sync/n8n-format-result.js`.
+Five regression tests execute that source: null deadlines, explicit deadlines
+in both modes, horizon-only dates, existing/replayed deadlines, invalid dates
+and completed-task protection. All passed; node configuration validation passed.
+
+Cloud execution 975 returned two broad tasks with null deadlines and separate
+week targets, with `sync_started: false`. Published planner version
+`574f8703-fc97-4462-9587-5a1c394ab820`; only `Format result` changed, with all
+connections and settings retained. The existing canvas grouping warning is
+unrelated to execution. Historical saved proposals/Notion tasks were not edited.
+Existing save paths were not exercised with real writes during this review.
+
+The user explicitly chose to keep Daily Review preparation paused.
+
+## Practical organiser additions — 23 September 2026
+
+After inspecting the actual Skool blueprint files, added two small features to
+the existing Calendar & Task Manager: title-word/project/status/page task filters
+and up to two same-day alternatives on an unavailable `check_slot`. Suggestions
+retain duration, working-window/weekend preferences and buffers, stay future-only
+and never book anything. Multiple task matches retain distinct IDs/state tokens.
+No new database, schema, credentials, models, nodes or scheduled work was added.
+Contact search, invitations and priority/assignee schema additions are deferred.
+
+Published calendar version `39ec9ce4-d31f-475e-97c3-064c72cff209`. Exactly four
+Code-node parameters changed; graph, settings, other nodes and write routes were
+preserved. The published source was compared with the tested files. Existing
+canvas grouping warnings are unrelated; the pre-existing date-method warning
+refers to legitimate JavaScript Date calls, not a Luxon `.toISOString()` call.
+
+Ten exact-source Node tests passed: filters, ambiguity, literal query validation,
+completed-task lookup, two buffered alternatives, no available alternatives,
+past/weekend/multi-day limits, existing conflict/state guards and spoken results.
+The node configuration checks, full repository validator and 19 orchestration
+tests passed. Two new organiser acceptance cases are definitions for the partner
+host, not completed voice tests.
+
+Cloud read-only executions 977 and 978 verified combined filters/no matches and
+the default open-task list. Execution 980 verified one exact current task by
+query/status/page ID. Execution 981 verified an unavailable partly elapsed window
+with no remaining same-day alternatives. Execution 982 verified the existing
+slot finder still returns two future half-hour suggestions. All reported
+`mutated: false`; no tasks, bookings or emails were created for testing.
+Busy-record alternative cases were tested using synthetic records locally.
+Partner Hermes installation/voice acceptance remains pending; Daily Review stays
+paused as explicitly requested.

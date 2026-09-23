@@ -39,16 +39,16 @@
     {
       "id": "project-planning", "label": "Project Planning",
       "skill_id": "project-planner", "workflow_key": "project-planner",
-      "tool_roles": ["project context", "current task state", "calendar availability"],
+      "tool_roles": ["project context", "current task state", "calendar availability", "source email or document for captured projects"],
       "intent_examples": ["Plan the next month for this project.", "Save those tasks to Notion.", "Add detailed time planning using my usual work hours."],
-      "notes": "For the configured Notion setup, the workflow owns plan generation and saving; do not produce another model plan first. The skill supplies portable planning expertise when a workflow is not needed. Broad planning is the default; planning alone creates no bookings."
+        "notes": "For the configured Notion setup, the workflow owns plan generation and saving; do not produce another model plan first. The skill supplies portable planning expertise when a workflow is not needed. Broad planning is the default; planning alone creates no bookings, and target weeks never become implicit deadlines."
     },
     {
       "id": "calendar-and-tasks", "label": "Calendar and Tasks",
       "skill_id": "calendar-planner", "workflow_key": "calendar",
-      "tool_roles": ["current tasks", "current schedule", "working preferences"],
-      "intent_examples": ["Move that task to tomorrow at ten.", "Mark it complete.", "Find a free hour next week."],
-      "notes": "Use existing Schedule & Tasks pages through the scheduler, with current state tokens for edits. Resolve target, date, timezone and scope from context. Reading availability does not book it; an explicit scheduling goal authorises the resolved scheduling action."
+      "tool_roles": ["current tasks", "current schedule", "working preferences", "source email references", "contact lookup when actually connected"],
+        "intent_examples": ["Move that task to tomorrow at ten.", "Find my brochure task.", "Show completed tasks for this project.", "Mark it complete.", "Find a free hour next week.", "If that slot is busy, show me alternatives.", "Turn that email into a task.", "Book that meeting and draft a reply."],
+        "notes": "Use existing Schedule & Tasks pages through the scheduler, with current state tokens for edits. Task reads support name/project/status/page filters; ambiguous matches require selection. Unavailable slot checks offer up to two same-day alternatives within the search preferences. Resolve target, date, timezone and scope from context. Reading availability does not book it; an explicit scheduling goal authorises the resolved scheduling action."
     },
     {
       "id": "outreach-drafts", "label": "Outreach Drafts",
@@ -67,16 +67,16 @@
     {
       "id": "email-drafting", "label": "Email Drafting",
       "skill_id": null, "workflow_key": null,
-      "tool_roles": ["email search and reading", "email draft creation and editing", "writing preferences"],
-      "intent_examples": ["Draft a reply to that email.", "Make the reply more concise."],
+      "tool_roles": ["email search and reading", "email draft creation and editing", "writing preferences", "contact lookup when actually connected", "confirmed calendar receipts"],
+      "intent_examples": ["Draft a reply to that email.", "Make the reply more concise.", "Draft Alex a confirmation of the meeting we just booked."],
       "notes": "Hermes drafts directly from the actual message and uses connected email tools as needed. No dedicated email-drafting app or retired Gmail bridge. Drafting does not imply sending."
     },
     {
       "id": "email-review", "label": "Saved Email Reviews",
       "skill_id": null, "workflow_key": "email-review",
-      "tool_roles": ["saved email reviews"],
-      "intent_examples": ["Show the saved email reviews."],
-      "notes": "Published saved-review route verified on 2026-09-17. list_reviews and get_review read existing review records, not a fresh inbox scan. Joining the shared instance leaves Gmail push processing, account bindings and background triggers unchanged. Inspect the current owner before any separate administrative changes."
+      "tool_roles": ["saved email reviews", "historical message, thread and draft references for follow-ups"],
+      "intent_examples": ["Show the saved email reviews.", "Summarise saved social updates.", "Show sales drafts.", "What emails need my review?", "Find saved receipts from bills@example.com with invoice in the subject.", "Open the original email for that receipt.", "Use that reviewed email as the source for a task."],
+      "notes": "Category and organiser updates published on 2026-09-23. list_reviews supports category, status, exact email sender, literal case-insensitive subject_contains and limit; get_review uses message_id. Counts describe returned items, not inbox totals or a fresh scan. Show gmail_url for the configured account when opening an original; it does not establish attachment contents or live message state. No saved matches is not proof of no matching mail. Retain message/thread/draft references; review age and historical/refresh flags are evidence limits, not current provider state. Follow organiser sequences in workflow-contracts.md before capturing a task, booking or drafting; source access needs actual email tools. Inbound triage never sends, forwards or marks messages read. Joining leaves account bindings and triggers unchanged. See components/email-triage/README.md."
     },
     {
       "id": "daily-priorities", "label": "Daily Review",

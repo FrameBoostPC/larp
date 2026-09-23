@@ -32,6 +32,8 @@ Python requirements, then preview and apply scripts/install_hermes.py for
 that profile with --n8n-url
 https://automatedai.app.n8n.cloud/mcp-server/http. Use the installer's selected
 MCP connection name. Guide me through login in the same profile if required.
+For the current email and calendar changes, use the tested
+codex/email-category-triage branch from pull request #1 until it merges to main.
 
 After reconnecting, discover the live n8n tools and workflows. Verify the six
 direct routes against their published graphs and execution permissions, and
@@ -59,10 +61,16 @@ if that is your environment's command.
 ```sh
 git clone https://github.com/FrameBoostPC/larp.git
 cd larp
+git switch --track origin/codex/email-category-triage
 python -m pip install -r requirements-dev.txt
 ```
 
-For an existing checkout, pull the current `main` without discarding local work.
+For an existing checkout, fetch the repository and switch to the tested
+`codex/email-category-triage` branch without discarding local work. This branch
+contains the currently published email and calendar updates in
+[pull request #1](https://github.com/FrameBoostPC/larp/pull/1). Once merged,
+return to `main` and pull it before reinstalling. Check for local changes before
+switching branches.
 Choose the **exact existing active profile directory**, containing `config.yaml`.
 It may be `~/.hermes`, a named profile, or a custom location. The dashboard and
 gateway must use this same profile. Substitute its absolute path below and run
