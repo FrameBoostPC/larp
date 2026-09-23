@@ -14,7 +14,7 @@ const cloud = `function decide($json,$,$now){${code('Check draft decision')}}
 function label($input){${code('Prepare label request')}}
 function receipt($json,$){${code('Confirm email organisation receipt')}}
 function parse($input){${code('Parse agent request')}}
-function reviews($input,$){${code('Return email reviews')}}
+function reviews($input,$,$now){${code('Return email reviews')}}
 const now='2026-09-23T00:00:00Z';
 const source={message_id:'synthetic-test',thread_id:'synthetic-thread',sender:'sender@example.com',reply_to:'sender@example.com',subject:'An update',body:'Thanks for the update.',received_at:now,processed_at:now,timezone:'Australia/Brisbane',automated:false,force_review:false};
 const meeting={requested:false,date_text:'',time_text:'',duration_text:'',timezone_text:'',location_text:'',reply_tone:'neutral'};
@@ -35,7 +35,7 @@ const clash=label({first:()=>({json:{...source,category:'MEETING',status:'DRAFT_
 let rejected=false;try{receipt({id:source.message_id,labelIds:clash.label_ids.slice(0,3)},()=>({item:{json:clash}}));}catch{rejected=true;}check(rejected,'Missing clash receipt rejected');
 const input={chatInput:JSON.stringify({request_id:'acceptance-01',session_id:'acceptance',revision:1,action:'list_reviews',arguments:{category:'SOCIAL',status:'FILE',limit:1}})};
 const parsed=parse({first:()=>({json:input})})[0].json;check(parsed.raw.category==='SOCIAL','Filter parsed');
-const returned=reviews({all:()=>[{json:{...source,category:'SOCIAL',status:'FILE'}}]},()=>({first:()=>({json:parsed})}))[0].json.tool_result;
+const returned=reviews({all:()=>[{json:{...source,category:'SOCIAL',status:'FILE'}}]},()=>({first:()=>({json:parsed})}),{toISO:()=>now})[0].json.tool_result;
 check(returned.data.items[0].category==='SOCIAL'&&returned.data.counts_scope==='returned_items'&&returned.data.live_inbox_checked===false,'Saved category summary');
 return [{json:{checks,passed:true,model_calls:0,mailbox_writes:0}}];`;
 const result=Function(cloud)();assert.equal(result[0].json.passed,true);
