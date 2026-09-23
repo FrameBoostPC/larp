@@ -41,10 +41,13 @@ All new and updated workflows must prioritise voice: direct agent actions, share
 conversation state, optional inputs and concise spoken results. See the
 [voice-first workflow standard](docs/integration.md#voice-first-workflow-standard).
 
-The [email triage component](components/email-triage/README.md) adds Gmail category
-labels and category/status filters for saved summaries. Hermes can answer
-“Show sales drafts” or “Summarise saved social updates” through the existing owner.
-Reply drafts, push intake and calendar checks remain in that owner.
+The [email triage component](components/email-triage/README.md) classifies incoming
+Gmail, applies category labels, saves summaries and prepares cautious reply drafts.
+Saved reviews can be filtered by category, status, exact sender address and subject
+phrase, then opened in the configured Gmail account. For example, ask “Show sales
+drafts” or “Find saved receipts from this sender with invoice in the subject.”
+Search covers recorded reviews rather than the live mailbox or attachment contents.
+Hermes voice use still needs acceptance on the partner's host.
 
 Hermes should infer the necessary steps from the user's goal, including creating
 and adapting content for named platforms without a repurposing command. Broader
@@ -54,6 +57,11 @@ see the [goal execution contract](docs/integration.md#goal-execution-and-autonom
 Social-account creation still requires capabilities in the actual Hermes host.
 
 The existing [n8n project planner](https://automatedai.app.n8n.cloud/workflow/tJ6YmJuFsyEoWYXw) is wired to the [n8n scheduling workflow](https://automatedai.app.n8n.cloud/workflow/rTed7PRf60fF2MjA) and its configured **Notion account 2 / Schedule & Tasks** database. Notion Calendar displays the same pages. The planner defaults to a broad four-week timeline; optional detailed planning estimates required effort and proposes sessions using calendar availability, working preferences and optional limits. Both modes retain shared task identities, edits and progress. Saving tasks does not automatically book suggested sessions. The mode update was live-tested and published on 2026-09-16. See the [n8n integration and recovery guide](docs/integration.md#weekly-planning-notion-and-calendar-sync).
+
+The calendar workflow can find existing tasks by title, project, status or exact
+page ID. When a requested time is busy, its availability check can suggest up to
+two same-day alternatives without booking them. See the
+[calendar read guide](components/planning-sync/n8n-calendar/README.md).
 
 The [portable Python planning-sync component](components/planning-sync/README.md) is an optional alternative for a separately deployed Hermes host. It has its own Notion schema, persistent state and calendar client contract; it is not the implementation running these n8n workflows.
 

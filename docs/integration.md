@@ -178,7 +178,7 @@ session IDs and revisions follow the same rules. Users do not dictate IDs.
 | --- | --- |
 | [Prospecting & Outreach \| 03 - Draft Outreach & Follow-ups](https://automatedai.app.n8n.cloud/workflow/m9qGDkh7s29y4Bef) | Published. `draft_outreach` prepares a Gmail draft; `get_status` reads its saved receipt. |
 | [Prospecting & Outreach \| 01 - Find Prospects](https://automatedai.app.n8n.cloud/workflow/xy4pY5ahF6DxwH9P) | Published. `find_prospects`, `get_status`, `cancel_campaign`. Research continues through the published [02 - Research Prospect (Internal)](https://automatedai.app.n8n.cloud/workflow/iA9pVjGGi46EMVs5) helper. |
-| [Email \| Inbox Organiser & Reply Drafts](https://automatedai.app.n8n.cloud/workflow/PelmDAUWeW5f0gQU) | Published. `list_reviews` and `get_review` read recorded email reviews. |
+| [Email \| Inbox Organiser & Reply Drafts](https://automatedai.app.n8n.cloud/workflow/PelmDAUWeW5f0gQU) | Published. `list_reviews` filters recorded reviews by category, status, sender or subject; `get_review` reads one by message ID. Results can link to the original Gmail thread. |
 | [Daily Review \| Priorities Digest](https://automatedai.app.n8n.cloud/workflow/Ux9xifTok0pnJRMZ) | Published retrieval; collection paused pending time selection. `get_daily_review` and retained `get_priorities` retrieve the latest prepared source snapshot. |
 
 Outreach needs `contact_name`, `contact_email`, `company`, `context`, `offer` and
