@@ -86,6 +86,8 @@ Category version published: `9af78a13-6e14-4966-a4b4-627ad28419d4`.
 Eight local policy tests and 65 candidate assertions passed. n8n execution 961
 passed the same 65 assertions. Labels were created in execution 940. Draft
 saved-data reads 962–964 covered filtered, unfiltered and identity-based reads.
+Production execution 966 returned a matching NOTIFICATION review and bounded
+category counts. The repository validator and 19 orchestration tests passed.
 Eight operations updated the existing 63-node owner with no update-validation
 warnings. Temporary setup and acceptance workflows are archived after use.
 
@@ -94,6 +96,12 @@ end-to-end incoming email run. No emails were sent for testing. Existing model,
 account, enabled triggers and activation boundary were preserved. The inspected
 September 23 workflow had push processing enabled; September 17 setup notes are
 historical and should not be replayed as current configuration instructions.
+
+The concurrent organiser update subsequently published only the saved-response
+node as version `f9025a8e-7ad2-401e-a619-609ebfc1b93e`, adding source references and
+historical/refresh flags. Inspection confirmed all six other changed email nodes
+still exactly matched this migration. Its source belongs to the organiser change;
+preserve those response additions in any subsequent email work.
 
 Rollback: restore the preserved prior version, validate and publish it. Added
 labels can remain; existing reviews and drafts need not be deleted.
