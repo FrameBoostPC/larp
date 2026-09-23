@@ -116,7 +116,7 @@ Calendar arguments:
 | Action | Required context and behaviour |
 | --- | --- |
 | `project_context` | `project_reference`; returns current tasks, page IDs, state tokens and commitments. |
-| `list_tasks` | Reads current tasks; resolve any supported filters using the live contract. |
+| `list_tasks` | Optional `query` searches title words (case-insensitive literal matches), `project_reference` selects the managed project, `status` selects an exact status, and `page_id` selects an exact task. Filters combine. Default status is open (Planned/In progress); explicitly request Done/Cancelled to include those. Returns current IDs/state tokens, filters, match_count and selection_required. |
 | `list_schedule` | `window_start`/`window_end` with offsets, or inclusive `from_date`/`to_date`. |
 | `find_slots`, `check_slot` | Resolved window; optional duration, daily start/end, weekends, buffer and maximum slots use the live contract. Reads never reserve time. |
 | `create` | `title`, `kind`; Task may be undated. Timed items need explicit `start` and `end`; date-only Task uses `due_date`. Stable reference derives from request ID. |
@@ -132,6 +132,23 @@ conflict. Reconcile the changed details before a new command. Replacing a deadli
 with a timed interval or the reverse needs the user's deliberate choice and
 `replace_date: true`. Each page holds one date interval; split a task before
 booking multiple separate sessions instead of overwriting the previous interval.
+
+Task search `query` is 1–200 characters. Multiple matches never authorise
+choosing the first one for an edit; use existing context or ask which task.
+No matches means no matching task, not permission to create a replacement.
+Search before asking users for record IDs, then carry the selected ID and fresh
+state token into the normal edit action.
+
+An unavailable `check_slot` returns up to two `alternatives` on the requested
+Brisbane date, with the same duration and buffer. It respects `day_start`,
+`day_end` and `include_weekends`; the existing defaults are 09:00–17:00 weekdays,
+not a claim about the user's preferences. Supply known preferences. Alternatives
+never start in the past and never cross the search window. Multi-day requests
+do not receive automatic alternatives. The result states search scope and any
+absence of options. Offer returned options, not invented times; refresh before
+booking the selected option. A conflict from a create/update can be followed by
+a read-only slot search using the accepted duration/preferences. Nothing is
+booked or moved by search, and existing mutation retry rules still apply.
 
 Calendar mutation retries keep the original request ID and arguments. A saved
 receipt is historical; refresh before a later edit. Changed arguments under the

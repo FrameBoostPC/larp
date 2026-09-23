@@ -6,6 +6,10 @@ Installing either skill alone does not start a sync service.
 
 ## Existing n8n integration
 
+The [calendar read-action source](n8n-calendar/README.md) adds practical task
+search and same-day alternatives for busy slot checks to the existing owner.
+It uses the same Notion records without a schema migration or new model call.
+
 The current integration belongs to **Planning & Calendar | 01 - Project Planner**
 and **Planning & Calendar | 02 - Calendar & Task Manager** in n8n. The scheduling workflow
 already uses **Notion account 2** and the **Schedule & Tasks** data source.
