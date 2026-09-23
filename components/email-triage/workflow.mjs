@@ -1,6 +1,7 @@
 import fs from 'node:fs';
 import {CATEGORIES} from './triage.mjs';
-const library = fs.readFileSync(new URL('./triage.mjs', import.meta.url), 'utf8').replace(/^export /gm,'');
+import {buildEmailReviewResult, emailReviewNodeCode} from '../hermes-orchestration/email-review.mjs';
+const library = buildEmailReviewResult.toString() + '\n' + fs.readFileSync(new URL('./triage.mjs', import.meta.url), 'utf8').replace(/^import .*;\r?\n/gm,'').replace(/^export /gm,'');
 const clone = value => JSON.parse(JSON.stringify(value));
 const requireNode = (w,name) => { const n = w.nodes.find(n => n.name === name); if (!n) throw new Error('Missing baseline node: ' + name); return n; };
 function replaceOnce(value, before, after) {
@@ -38,7 +39,7 @@ export function emailOperations(baseline, labels) {
   for (const key of ['category','status']) read.filters.conditions.push({keyName:'={{ $json.raw.' + key + ' ? "' + key + '" : "message_id" }}',condition:'={{ $json.raw.' + key + ' || $json.operation === "get_review" ? "eq" : "isNotEmpty" }}',keyValue:'={{ $json.raw.' + key + ' || $json.raw.message_id || "" }}'});
   read.orderByDirection = 'DESC';
   set('Read requested email reviews',read);
-  set('Return email reviews',{mode:'runOnceForAllItems',jsCode:library + '\nreturn [{json:returnReviews($("Parse agent request").first().json,$input.all().map(x=>x.json))}];'});
+  set('Return email reviews',{mode:'runOnceForAllItems',jsCode:emailReviewNodeCode()});
   operations.push({type:'setWorkflowMetadata',description:'Gmail push triage with category labels, cautious reply drafts and calendar checks. Voice reads filter saved summaries by category/status. Durable duplicate protection; no sending, forwarding, marking read or deleting.'});
   return operations;
 }

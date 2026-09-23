@@ -1,3 +1,4 @@
+import {buildEmailReviewResult} from '../hermes-orchestration/email-review.mjs';
 export const CATEGORIES = ['ACTION', 'MEETING', 'FINANCE', 'NEWSLETTER', 'NOTIFICATION', 'PERSONAL', 'OTHER', 'PROMOTION', 'SOCIAL', 'SALES', 'RECRUITMENT', 'RECEIPT'];
 export const LABEL_NAMES = Object.fromEntries(CATEGORIES.map(c => [c, 'Automation/' + c[0] + c.slice(1).toLowerCase()]));
 
@@ -46,14 +47,6 @@ export function parseReviewRequest(input) {
   return {origin:'agent', agent:v, operation:v.action, raw:a};
 }
 
-export function returnReviews(q, rows) {
-  if (q.agent_result) return q.agent_result;
-  const valid = rows.filter(x => x.message_id);
-  if (q.operation === 'get_review' && valid.length > 1) return envelope(q.agent,'conflict','Duplicate email review records need attention.');
-  const items = valid.map(x => ({message_id:x.message_id, thread_id:x.thread_id || null, subject:x.subject, sender:x.sender, category:x.category || 'OTHER', priority:x.priority, status:x.status, summary:x.summary, reason:x.reason, draft_id:x.draft_id || null, processed_at:x.processed_at, time_clash:x.time_clash === true, tags:x.time_clash === true ? ['clash'] : []}));
-  const counts = {categories:{}, statuses:{}};
-  for (const item of items) { counts.categories[item.category] = (counts.categories[item.category] || 0) + 1; counts.statuses[item.status] = (counts.statuses[item.status] || 0) + 1; }
-  const scope = q.raw.category ? q.raw.category.toLowerCase() + ' ' : '';
-  const spoken = items.length ? 'I found ' + items.length + ' saved ' + scope + 'email review' + (items.length === 1 ? '.' : 's.') : 'No saved email reviews matched.';
-  return envelope(q.agent, items.length || q.operation === 'list_reviews' ? 'completed' : 'not_found', spoken, {items, source:'saved_email_review', live_inbox_checked:false, filters:{category:q.raw.category ?? null,status:q.raw.status ?? null}, counts, counts_scope:'returned_items', limit:q.raw.limit || 20, may_have_more:q.operation === 'list_reviews' && items.length === (q.raw.limit || 20)});
+export function returnReviews(q, rows, retrievedAt = new Date().toISOString()) {
+  return buildEmailReviewResult(q, rows, retrievedAt);
 }
